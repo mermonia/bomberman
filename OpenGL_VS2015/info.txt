@@ -1,0 +1,69 @@
+================================================================================
+                    POCKET BOMBERMAN 2D - FIB VJ (2026/27 Q1)
+================================================================================
+
+1. INTEGRANTS DEL GRUP
+--------------------------------------------------------------------------------
+- Membre 1: [Nom i Cognoms 1]
+- Membre 2: [Nom i Cognoms 2]
+
+
+2. FUNCIONALITATS IMPLEMENTADES
+--------------------------------------------------------------------------------
+[PART BÀSICA - 6 PUNTS]
+- Estructura bàsica de 4 pantalles: Menú Principal, Jugar, Instruccions, Crèdits,
+  a més de pantalles de Game Over i Victòria final.
+- 5 Nivells dissenyats (level01.txt a level05.txt) amb progressió en dificultat i plataformes.
+- Moviment complet del Bomberman: esquerra, dreta, salt parabòlic i caiguda.
+- Tres enemics amb comportaments completament diferenciats:
+    1. EnemyWalker: patrulla terrestre amb detecció de parets i voreres (no cau al buit).
+    2. EnemyFlyer: volador amb trajectòria sinusoïdal i rebot contra parets.
+    3. EnemyShooter: perseguidor/disparador que detecta la distància al Bomberman i dispara boles de foc.
+- Boss final al Nivell 5: "Evil Mountain Boss" amb 5 punts de vida, atac de salt/aixafament,
+  trets de foc triples i període d'invulnerabilitat parpellejant.
+- Mecànica de 3 vides: perdre les 3 vides mostra Game Over i retorna al menú.
+- Bombes flotants (Pocket Bomberman): les bombes NO cauen per gravetat i es queden flotant.
+- Salt sobre les bombes: en Bomberman pot recolzar-se i saltar a sobre de les seves bombes
+  per pujar a zones elevades i superar obstacles.
+- Blocs destructibles: arbustos/roques toves que s'escombren amb les explosions en creu (+).
+- 4 Potenciadors (Items) alliberats al trencar blocs:
+    1. Bomb Up: augmenta el nombre de bombes simultànies que es poden col·locar.
+    2. Fire Up: augmenta la mida i radi de les explosions.
+    3. Cor (Heart): protegeix en Bomberman d'un cop d'enemic/foc.
+    4. Speed Up: incrementa la velocitat de moviment del jugador.
+- Temps límit per passar-se cada nivell (compte enrere de 2 minuts al marcador).
+- Porta de sortida: tancada fins que s'eliminen tots els enemics del nivell (o amb trampa).
+- Interfície gràfica (HUD): marcador superior amb rellotge/temps, vides, enemics restants,
+  bombes disponibles/màximes, potència de foc i indicador de God Mode.
+- Tecles de Trampa / Debug (Obligatòries):
+    * 'G': activa / desactiva el God Mode (invulnerabilitat).
+    * 'K': elimina instantàniament tots els enemics del nivell i obre la porta de sortida.
+    * '1', '2', '3', '4', '5': salta i carrega directament el nivell corresponent.
+
+[POLISH - 4 PUNTS]
+- So complet: motor d'àudio retro de 8-bits procedimental (sense dependències externes)
+  amb efectes de so per a salt, col·locació de bomba, explosió realista, recollida d'ítems,
+  dany, mort d'enemics, obertura de porta, victòria, derrota i trampa.
+- Animacions i transicions d'estat per a totes les entitats (parpelleig per dany, tics de bomba,
+  explosió animada en creu, canvis d'estat del Boss, rotació i estats de menú).
+- Screen Shake: sacsejada de càmera en esclatar bombes i en impactes de salt del Boss.
+- Generador d'assets automàtic: crea textures pixel-art autònomes si no hi són presents.
+
+
+3. INSTRUCCIONS DEL JOC I CONTROLS
+--------------------------------------------------------------------------------
+- Menú:
+    * Fletxes AMUNT / AVALL: navegar entre opcions (Play, Instructions, Credits).
+    * ENTER o ESPAI: seleccionar opció.
+    * ESC: tornar al menú anterior o sortir.
+
+- Durant la partida (Controls Bomberman):
+    * Fletxes ESQUERRA / DRETA: caminar.
+    * Fletxa AMUNT: saltar (també permet saltar sobre les bombes flotants).
+    * ESPAI o tecla 'X': col·locar bomba flotant al centre del tile.
+    * ESC: tornar al Menú Principal.
+
+- Tecles de Trampa (Correcció):
+    * 'G': God Mode (invulnerabilitat).
+    * 'K': Elimina tots els enemics i obre la porta.
+    * '1', '2', '3', '4', '5': Carrega directament els nivells 1, 2, 3, 4 o 5.

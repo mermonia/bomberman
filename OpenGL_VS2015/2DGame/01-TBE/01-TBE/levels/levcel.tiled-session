@@ -1,0 +1,46 @@
+{
+    "activeFile": "nou_level.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images/blocks.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images/blocks4.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "nou_level.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 274.33333333333326,
+                "y": 193
+            }
+        }
+    },
+    "last.exportedFilePath": "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/levels",
+    "last.imagePath": "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images",
+    "map.height": 18,
+    "map.lastUsedExportFilter": "Archivos CSV (*.csv)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 35,
+    "openFiles": [
+        "nou_level.tmx",
+        "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images/blocks4.tsx"
+    ],
+    "project": "levcel.tiled-project",
+    "recentFiles": [
+        "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images/blocks4.tsx",
+        "nou_level.tmx",
+        "C:/Users/carle/Documents/VJ/OpenGL_VS2015/OpenGL_VS2015/2DGame/01-TBE/01-TBE/images/blocks.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
