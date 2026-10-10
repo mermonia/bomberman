@@ -11,11 +11,15 @@
 #define INIT_PLAYER_X_TILES 4
 #define INIT_PLAYER_Y_TILES 25
 
+#define INIT_ENEMY_X_TILES 10
+#define INIT_ENEMY_Y_TILES 20
+
 
 Scene::Scene()
 {
 	map = NULL;
 	player = NULL;
+	enemy = NULL;
 }
 
 Scene::~Scene()
@@ -25,6 +29,8 @@ Scene::~Scene()
 		delete map;
 	if(player != NULL)
 		delete player;
+	if(enemy != NULL)
+		delete enemy;
 }
 
 
@@ -36,6 +42,12 @@ void Scene::init()
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
 	player->setTileMap(map);
+	
+	enemy = new Enemy();
+	enemy->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	enemy->setPosition(glm::vec2(INIT_ENEMY_X_TILES * map->getTileSize(), INIT_ENEMY_Y_TILES * map->getTileSize()));
+	enemy->setTileMap(map);
+
 	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
 	currentTime = 0.0f;
 }
@@ -44,6 +56,8 @@ void Scene::update(int deltaTime)
 {
 	currentTime += deltaTime;
 	player->update(deltaTime);
+	if(enemy != NULL)
+		enemy->update(deltaTime);
 }
 
 void Scene::render()
@@ -58,6 +72,8 @@ void Scene::render()
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
 	map->render();
 	player->render();
+	if(enemy != NULL)
+		enemy->render();
 }
 
 void Scene::initShaders()
