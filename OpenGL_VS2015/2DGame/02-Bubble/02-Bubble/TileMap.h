@@ -29,6 +29,9 @@ public:
 	void free();
 	
 	int getTileSize() const { return tileSize; }
+	int getMapWidth() const { return mapSize.x; }
+	int getMapHeight() const { return mapSize.y; }
+	glm::ivec2 getMapSize() const { return mapSize; }
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
@@ -39,6 +42,7 @@ public:
 private:
 	bool loadLevel(const string &levelFile);
 	void prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program);
+	bool isSolidTile(int tile) const;
 
 private:
 	GLuint vao;
@@ -50,6 +54,7 @@ private:
 	Texture tilesheet;
 	glm::vec2 tileTexSize;
 	int *map;
+	bool zeroBased;
 
 };
 

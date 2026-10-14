@@ -18,6 +18,8 @@ TileMap *TileMap::createTileMap(const string &levelFile, const glm::vec2 &minCoo
 
 TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
 {
+	map = NULL;
+	zeroBased = false;
 	loadLevel(levelFile);
 	prepareArrays(minCoords, program);
 }
@@ -61,12 +63,15 @@ bool TileMap::loadLevel(const string &levelFile)
 	if(line.compare(0, 7, "TILEMAP") != 0)
 		return false;
 	getline(fin, line);
+	sstream.clear();
 	sstream.str(line);
 	sstream >> mapSize.x >> mapSize.y;
 	getline(fin, line);
+	sstream.clear();
 	sstream.str(line);
 	sstream >> tileSize >> blockSize;
 	getline(fin, line);
+	sstream.clear();
 	sstream.str(line);
 	sstream >> tilesheetFile;
 	tilesheet.loadFromFile(tilesheetFile, TEXTURE_PIXEL_FORMAT_RGBA);
@@ -75,29 +80,58 @@ bool TileMap::loadLevel(const string &levelFile)
 	tilesheet.setMinFilter(GL_NEAREST);
 	tilesheet.setMagFilter(GL_NEAREST);
 	getline(fin, line);
+	sstream.clear();
 	sstream.str(line);
 	sstream >> tilesheetSize.x >> tilesheetSize.y;
 	tileTexSize = glm::vec2(1.f / tilesheetSize.x, 1.f / tilesheetSize.y);
 	
+	zeroBased = (tilesheetSize.x > 2 || tilesheetFile.find("blocks4") != string::npos);
+
 	map = new int[mapSize.x * mapSize.y];
-	for(int j=0; j<mapSize.y; j++)
+	if(zeroBased)
 	{
-		for(int i=0; i<mapSize.x; i++)
+		for(int j=0; j<mapSize.y; j++)
 		{
-			fin.get(tile);
-			if(tile == ' ')
-				map[j*mapSize.x+i] = 0;
-			else
-				map[j*mapSize.x+i] = tile - int('0');
+			for(int i=0; i<mapSize.x; i++)
+			{
+				fin >> map[j*mapSize.x+i];
+			}
 		}
-		fin.get(tile);
+	}
+	else
+	{
+		for(int j=0; j<mapSize.y; j++)
+		{
+			for(int i=0; i<mapSize.x; i++)
+			{
+				fin.get(tile);
+				if(tile == ' ')
+					map[j*mapSize.x+i] = 0;
+				else
+					map[j*mapSize.x+i] = tile - int('0');
+			}
+			fin.get(tile);
 #ifndef _WIN32
-		fin.get(tile);
+			fin.get(tile);
 #endif
+		}
 	}
 	fin.close();
 	
 	return true;
+}
+
+bool TileMap::isSolidTile(int tile) const
+{
+	if(zeroBased)
+	{
+		// A level4 (blocks4), la textura 2 correspon al fons (aire transitable)
+		return (tile != 2);
+	}
+	else
+	{
+		return (tile != 0);
+	}
 }
 
 void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
@@ -113,12 +147,13 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 		for(int i=0; i<mapSize.x; i++)
 		{
 			tile = map[j * mapSize.x + i];
-			if(tile != 0)
+			if(tile > 0 || (zeroBased && tile >= 0))
 			{
 				// Non-empty tile
 				nTiles++;
 				posTile = glm::vec2(minCoords.x + i * tileSize, minCoords.y + j * tileSize);
-				texCoordTile[0] = glm::vec2(float((tile-1)%tilesheetSize.x) / tilesheetSize.x, float((tile-1)/tilesheetSize.x) / tilesheetSize.y);
+				int tileIdx = zeroBased ? tile : (tile - 1);
+				texCoordTile[0] = glm::vec2(float(tileIdx % tilesheetSize.x) / tilesheetSize.x, float(tileIdx / tilesheetSize.x) / tilesheetSize.y);
 				texCoordTile[1] = texCoordTile[0] + tileTexSize;
 				//texCoordTile[0] += halfTexel;
 				texCoordTile[1] -= halfTexel;
@@ -160,9 +195,14 @@ bool TileMap::collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) c
 	x = pos.x / tileSize;
 	y0 = pos.y / tileSize;
 	y1 = (pos.y + size.y - 1) / tileSize;
+	if(x < 0) return true;
+	if(x >= mapSize.x) return false;
+	if(y0 < 0) y0 = 0;
+	if(y1 >= mapSize.y) y1 = mapSize.y - 1;
+
 	for(int y=y0; y<=y1; y++)
 	{
-		if(map[y*mapSize.x+x] != 0)
+		if(isSolidTile(map[y*mapSize.x+x]))
 			return true;
 	}
 	
@@ -176,9 +216,14 @@ bool TileMap::collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) 
 	x = (pos.x + size.x - 1) / tileSize;
 	y0 = pos.y / tileSize;
 	y1 = (pos.y + size.y - 1) / tileSize;
+	if(x >= mapSize.x) return true;
+	if(x < 0) return false;
+	if(y0 < 0) y0 = 0;
+	if(y1 >= mapSize.y) y1 = mapSize.y - 1;
+
 	for(int y=y0; y<=y1; y++)
 	{
-		if(map[y*mapSize.x+x] != 0)
+		if(isSolidTile(map[y*mapSize.x+x]))
 			return true;
 	}
 	
@@ -198,7 +243,7 @@ bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, i
 
 	for(int x=x0; x<=x1; x++)
 	{
-		if(map[y*mapSize.x+x] != 0)
+		if(isSolidTile(map[y*mapSize.x+x]))
 		{
 			if(*posY - tileSize * y + size.y <= 10)
 			{
@@ -229,7 +274,7 @@ bool TileMap::collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int
 
 	for(int x=x0; x<=x1; x++)
 	{
-		if(map[y*mapSize.x+x] != 0)
+		if(isSolidTile(map[y*mapSize.x+x]))
 		{
 			*posY = tileSize * (y + 1);
 			return true;
@@ -243,7 +288,7 @@ bool TileMap::isGround(int tileX, int tileY) const
 {
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
-	return (map[tileY * mapSize.x + tileX] != 0);
+	return isSolidTile(map[tileY * mapSize.x + tileX]);
 }
 
 

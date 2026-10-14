@@ -23,13 +23,21 @@ public:
 	
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
+	glm::vec2 getPosition() const { return glm::vec2(posPlayer); }
+	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
+	void die();
+	bool isDying() const { return bDying; }
 	
 private:
 	bool bJumping;
-	glm::ivec2 tileMapDispl, posPlayer;
+	bool bDying;
+	int dyingTime;
+	glm::ivec2 tileMapDispl, posPlayer, spawnPos;
 	int jumpAngle, startY;
 	Texture spritesheet;
+	Texture spritesheetDeath;
 	Sprite *sprite;
+	Sprite *spriteDeath;
 	TileMap *map;
 
 };

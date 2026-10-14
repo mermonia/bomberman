@@ -30,10 +30,10 @@ void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 253.f;
 	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 632.f;
 
-	// Cada sprite individual d'enemy.png és de 16x16 píxels, representat en un quad de 32x32
-	// per mantenir l'escala dels blocs i del personatge (Player).
+	// Cada sprite individual d'enemy.png és de 16x16 píxels, representat en un quad de 16x16
+	// per mantenir l'escala 1:1 dels blocs del mapa i del personatge (Player).
 	glm::vec2 sizeInSpritesheet(16.f / texW, 16.f / texH);
-	sprite = Sprite::createSprite(glm::vec2(32, 32), sizeInSpritesheet, &spritesheet, &shaderProgram);
+	sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSpritesheet, &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(2);
 	
 	// Animació cap a l'esquerra (fotogrames 0 i 1)
@@ -59,7 +59,7 @@ void Enemy::update(int deltaTime)
 
 	// Gravetat: cau fins a tocar el terra
 	posEnemy.y += FALL_STEP;
-	bool onGround = map->collisionMoveDown(posEnemy, glm::ivec2(32, 32), &posEnemy.y);
+	bool onGround = map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
 
 	if(onGround)
 	{
@@ -68,11 +68,11 @@ void Enemy::update(int deltaTime)
 			posEnemy.x += SPEED;
 			
 			// Comprovar col·lisió amb paret a la dreta
-			bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(32, 32));
+			bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
 			
 			// Comprovar si hi ha precipici a la dreta (el tile sota el peu dret)
-			int xTileAhead = (posEnemy.x + 32) / map->getTileSize();
-			int yTileUnder = (posEnemy.y + 32) / map->getTileSize();
+			int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
+			int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
 			bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
 
 			if(hitWall || cliffAhead)
@@ -93,11 +93,11 @@ void Enemy::update(int deltaTime)
 			posEnemy.x -= SPEED;
 			
 			// Comprovar col·lisió amb paret a l'esquerra
-			bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(32, 32));
+			bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
 			
 			// Comprovar si hi ha precipici a l'esquerra (el tile sota el peu esquerre)
 			int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
-			int yTileUnder = (posEnemy.y + 32) / map->getTileSize();
+			int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
 			bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
 
 			if(hitWall || cliffAhead)
