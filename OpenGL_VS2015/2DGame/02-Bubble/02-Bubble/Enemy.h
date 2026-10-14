@@ -26,6 +26,7 @@ public:
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
 	glm::ivec2 getPosition() const { return posEnemy; }
+	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
 
 private:
 	glm::ivec2 tileMapDispl, posEnemy;
