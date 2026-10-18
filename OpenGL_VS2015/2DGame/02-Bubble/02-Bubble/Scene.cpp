@@ -15,11 +15,15 @@
 #define INIT_ENEMY_X_TILES 10
 #define INIT_ENEMY_Y_TILES 2
 
+#define INIT_ENEMY2_X_TILES 4
+#define INIT_ENEMY2_Y_TILES 11
+
 
 Scene::Scene()
 {
 	map = NULL;
 	player = NULL;
+	bBombKeyPressed = false;
 	cameraX = 0.f;
 	cameraY = 0.f;
 	cameraWidth = CAMERA_WIDTH;
@@ -39,6 +43,12 @@ Scene::~Scene()
 			delete enemies[i];
 	}
 	enemies.clear();
+	for(unsigned int i = 0; i < bombs.size(); i++)
+	{
+		if(bombs[i] != NULL)
+			delete bombs[i];
+	}
+	bombs.clear();
 }
 
 
@@ -50,8 +60,10 @@ void Scene::init()
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
 	player->setTileMap(map);
+	player->setBombs(&bombs);
 	
 	addEnemy(INIT_ENEMY_X_TILES, INIT_ENEMY_Y_TILES);
+	addEnemy2(INIT_ENEMY2_X_TILES, INIT_ENEMY2_Y_TILES);
 
 	cameraWidth = CAMERA_WIDTH;
 	cameraHeight = CAMERA_HEIGHT;
@@ -60,6 +72,14 @@ void Scene::init()
 
 	updateCamera();
 	currentTime = 0.0f;
+
+	// Carregar textura de la bomba (bomba.png)
+	spritesheetBomb.loadFromFile("images/bomba.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setMinFilter(GL_NEAREST);
+	spritesheetBomb.setMagFilter(GL_NEAREST);
+	bBombKeyPressed = false;
 }
 
 void Scene::addEnemy(int tileX, int tileY)
@@ -71,17 +91,63 @@ void Scene::addEnemy(int tileX, int tileY)
 	enemies.push_back(newEnemy);
 }
 
+void Scene::addEnemy2(int tileX, int tileY)
+{
+	Enemy2 *newEnemy2 = new Enemy2();
+	newEnemy2->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	newEnemy2->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
+	newEnemy2->setTileMap(map);
+	newEnemy2->setPlayer(player);
+	enemies.push_back(newEnemy2);
+}
+
 void Scene::update(int deltaTime)
 {
+	// Plantar bomba en prémer la lletra 'a'
+	if(Game::instance().getKey(GLFW_KEY_A))
+	{
+		if(!bBombKeyPressed && player != NULL && !player->isDying())
+		{
+			bBombKeyPressed = true;
+			dropBomb();
+		}
+	}
+	else
+	{
+		bBombKeyPressed = false;
+	}
+
 	currentTime += deltaTime;
 	player->update(deltaTime);
-	for(unsigned int i = 0; i < enemies.size(); i++)
+	for(int i = int(enemies.size()) - 1; i >= 0; i--)
 	{
 		if(enemies[i] != NULL)
+		{
 			enemies[i]->update(deltaTime);
+			if(enemies[i]->isDead())
+			{
+				delete enemies[i];
+				enemies.erase(enemies.begin() + i);
+			}
+		}
+	}
+
+	// Actualitzar bombes
+	for(int b = int(bombs.size()) - 1; b >= 0; b--)
+	{
+		if(bombs[b] != NULL)
+		{
+			bombs[b]->update(deltaTime);
+			if(bombs[b]->isFinished())
+			{
+				delete bombs[b];
+				bombs.erase(bombs.begin() + b);
+			}
+		}
 	}
 
 	checkCollisions();
+	checkBombCollisions();
 	updateCamera();
 }
 
@@ -95,7 +161,7 @@ void Scene::checkCollisions()
 
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
-		if(enemies[i] == NULL)
+		if(enemies[i] == NULL || enemies[i]->isDying() || enemies[i]->isDead())
 			continue;
 
 		glm::vec2 ePos = glm::vec2(enemies[i]->getPosition());
@@ -110,6 +176,69 @@ void Scene::checkCollisions()
 			// El personatge sempre es mor quan toca un enemic
 			player->die();
 			break;
+		}
+	}
+}
+
+void Scene::dropBomb()
+{
+	if(player == NULL || map == NULL)
+		return;
+
+	// Posició del jugador alineada al bloc més proper de 16x16
+	glm::vec2 pPos = player->getPosition();
+	int tileX = int((pPos.x + 8.f) / map->getTileSize());
+	int tileY = int((pPos.y + 8.f) / map->getTileSize());
+
+	// Evitar plantar dues bombes a la mateixa casella
+	for(unsigned int i = 0; i < bombs.size(); i++)
+	{
+		if(bombs[i]->getTileCoords() == glm::ivec2(tileX, tileY))
+			return;
+	}
+
+	Bomb *newBomb = new Bomb(glm::ivec2(tileX, tileY), glm::ivec2(SCREEN_X, SCREEN_Y), &spritesheetBomb, &texProgram, map);
+	bombs.push_back(newBomb);
+}
+
+void Scene::checkBombCollisions()
+{
+	for(unsigned int b = 0; b < bombs.size(); b++)
+	{
+		if(bombs[b] != NULL && bombs[b]->isExploding())
+		{
+			std::vector<glm::ivec2> explTiles = bombs[b]->getExplosionTiles();
+			for(unsigned int t = 0; t < explTiles.size(); t++)
+			{
+				glm::vec2 tPos = glm::vec2(explTiles[t]);
+				glm::vec2 tSize(16.f, 16.f);
+
+				// 1. Matar el jugador si toca l'explosió
+				if(player != NULL && !player->isDying())
+				{
+					glm::vec2 pPos = player->getPosition();
+					glm::vec2 pSize = glm::vec2(player->getSize());
+					if((pPos.x < tPos.x + tSize.x) && (pPos.x + pSize.x > tPos.x) &&
+					   (pPos.y < tPos.y + tSize.y) && (pPos.y + pSize.y > tPos.y))
+					{
+						player->die(true);
+					}
+				}
+
+				// 2. Matar els enemics que toquin l'explosió amb la seva animació de mort
+				for(unsigned int e = 0; e < enemies.size(); e++)
+				{
+					if(enemies[e] == NULL || enemies[e]->isDying() || enemies[e]->isDead())
+						continue;
+					glm::vec2 ePos = glm::vec2(enemies[e]->getPosition());
+					glm::vec2 eSize = glm::vec2(enemies[e]->getSize());
+					if((ePos.x < tPos.x + tSize.x) && (ePos.x + eSize.x > tPos.x) &&
+					   (ePos.y < tPos.y + tSize.y) && (ePos.y + eSize.y > tPos.y))
+					{
+						enemies[e]->die();
+					}
+				}
+			}
 		}
 	}
 }
@@ -163,6 +292,11 @@ void Scene::render()
 	texProgram.setUniformMatrix4f("modelview", modelview);
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
 	map->render();
+	for(unsigned int i = 0; i < bombs.size(); i++)
+	{
+		if(bombs[i] != NULL)
+			bombs[i]->render();
+	}
 	player->render();
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
