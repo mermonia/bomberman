@@ -32,6 +32,9 @@ Sprite::Sprite(const glm::vec2 &quadSize, const glm::vec2 &sizeInSpritesheet, Te
 	shaderProgram = program;
 	currentAnimation = -1;
 	position = glm::vec2(0.f);
+	this->quadSize = quadSize;
+	angle = 0.f;
+	bFlipX = false;
 }
 
 Sprite::~Sprite()
@@ -57,6 +60,18 @@ void Sprite::update(int deltaTime)
 void Sprite::render() const
 {
 	glm::mat4 modelview = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.f));
+	if(bFlipX)
+	{
+		modelview = glm::translate(modelview, glm::vec3(quadSize.x * 0.5f, quadSize.y * 0.5f, 0.f));
+		modelview = glm::scale(modelview, glm::vec3(-1.f, 1.f, 1.f));
+		modelview = glm::translate(modelview, glm::vec3(-quadSize.x * 0.5f, -quadSize.y * 0.5f, 0.f));
+	}
+	if(angle != 0.f)
+	{
+		modelview = glm::translate(modelview, glm::vec3(quadSize.x * 0.5f, quadSize.y * 0.5f, 0.f));
+		modelview = glm::rotate(modelview, glm::radians(angle), glm::vec3(0.f, 0.f, 1.f));
+		modelview = glm::translate(modelview, glm::vec3(-quadSize.x * 0.5f, -quadSize.y * 0.5f, 0.f));
+	}
 	shaderProgram->setUniformMatrix4f("modelview", modelview);
 	shaderProgram->setUniform2f("texCoordDispl", texCoordDispl.x, texCoordDispl.y);
 	glEnable(GL_TEXTURE_2D);
@@ -110,6 +125,16 @@ int Sprite::animation() const
 void Sprite::setPosition(const glm::vec2 &pos)
 {
 	position = pos;
+}
+
+void Sprite::setAngle(float angleDegrees)
+{
+	angle = angleDegrees;
+}
+
+void Sprite::setFlipX(bool flip)
+{
+	bFlipX = flip;
 }
 
 

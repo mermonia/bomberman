@@ -3,11 +3,10 @@
 #include "Enemy.h"
 
 #define FALL_STEP 4
-#define SPEED 1
 
 enum EnemyAnims
 {
-	MOVE_LEFT, MOVE_RIGHT
+	MOVE_LEFT, MOVE_RIGHT, DIE
 };
 
 Enemy::Enemy()
@@ -15,6 +14,10 @@ Enemy::Enemy()
 	sprite = NULL;
 	map = NULL;
 	direction = MOVE_DIR_RIGHT;
+	bDying = false;
+	bDead = false;
+	dyingTime = 0;
+	moveTimer = 0;
 }
 
 Enemy::~Enemy()
@@ -34,17 +37,23 @@ void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	// per mantenir l'escala 1:1 dels blocs del mapa i del personatge (Player).
 	glm::vec2 sizeInSpritesheet(16.f / texW, 16.f / texH);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSpritesheet, &spritesheet, &shaderProgram);
-	sprite->setNumberAnimations(2);
+	sprite->setNumberAnimations(3);
 	
 	// Animació cap a l'esquerra (fotogrames 0 i 1)
-	sprite->setAnimationSpeed(MOVE_LEFT, 6);
+	sprite->setAnimationSpeed(MOVE_LEFT, 5);
 	sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(MOVE_LEFT, glm::vec2(1.f * 16.f / texW, 0.f));
 	
 	// Animació cap a la dreta (fotogrames 2 i 3)
-	sprite->setAnimationSpeed(MOVE_RIGHT, 6);
+	sprite->setAnimationSpeed(MOVE_RIGHT, 5);
 	sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(MOVE_RIGHT, glm::vec2(1.f * 16.f / texW, 0.f));
+
+	// Animació de mort (fotogrames 4, 5 i 6)
+	sprite->setAnimationSpeed(DIE, 6);
+	sprite->addKeyframe(DIE, glm::vec2(4.f * 16.f / texW, 0.f));
+	sprite->addKeyframe(DIE, glm::vec2(5.f * 16.f / texW, 0.f));
+	sprite->addKeyframe(DIE, glm::vec2(6.f * 16.f / texW, 0.f));
 	
 	direction = MOVE_DIR_RIGHT;
 	sprite->changeAnimation(MOVE_RIGHT);
@@ -57,60 +66,75 @@ void Enemy::update(int deltaTime)
 {
 	sprite->update(deltaTime);
 
+	if(bDying)
+	{
+		dyingTime += deltaTime;
+		if(dyingTime >= 500)
+		{
+			bDead = true;
+		}
+		return;
+	}
+
 	// Gravetat: cau fins a tocar el terra
 	posEnemy.y += FALL_STEP;
-	bool onGround = map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
+	bool onGround = (map != NULL) && map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
 
-	if(onGround)
+	if(onGround && map != NULL)
 	{
-		if(direction == MOVE_DIR_RIGHT)
-		{
-			posEnemy.x += SPEED;
-			
-			// Comprovar col·lisió amb paret a la dreta
-			bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
-			
-			// Comprovar si hi ha precipici a la dreta (el tile sota el peu dret)
-			int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
-			int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-			bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
+		// Moviment més lent: 1 píxel cada 26 ms (~38 px/segon)
+		moveTimer += deltaTime;
+		int stepTime = 26;
 
-			if(hitWall || cliffAhead)
-			{
-				posEnemy.x -= SPEED;
-				direction = MOVE_DIR_LEFT;
-				if(sprite->animation() != MOVE_LEFT)
-					sprite->changeAnimation(MOVE_LEFT);
-			}
-			else
-			{
-				if(sprite->animation() != MOVE_RIGHT)
-					sprite->changeAnimation(MOVE_RIGHT);
-			}
-		}
-		else if(direction == MOVE_DIR_LEFT)
+		while(moveTimer >= stepTime)
 		{
-			posEnemy.x -= SPEED;
-			
-			// Comprovar col·lisió amb paret a l'esquerra
-			bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
-			
-			// Comprovar si hi ha precipici a l'esquerra (el tile sota el peu esquerre)
-			int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
-			int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-			bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
+			moveTimer -= stepTime;
 
-			if(hitWall || cliffAhead)
+			if(direction == MOVE_DIR_RIGHT)
 			{
-				posEnemy.x += SPEED;
-				direction = MOVE_DIR_RIGHT;
-				if(sprite->animation() != MOVE_RIGHT)
-					sprite->changeAnimation(MOVE_RIGHT);
+				posEnemy.x += 1;
+				
+				bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
+				int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
+				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
+				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
+
+				if(hitWall || cliffAhead)
+				{
+					posEnemy.x -= 1;
+					direction = MOVE_DIR_LEFT;
+					if(sprite->animation() != MOVE_LEFT)
+						sprite->changeAnimation(MOVE_LEFT);
+					break;
+				}
+				else
+				{
+					if(sprite->animation() != MOVE_RIGHT)
+						sprite->changeAnimation(MOVE_RIGHT);
+				}
 			}
-			else
+			else if(direction == MOVE_DIR_LEFT)
 			{
-				if(sprite->animation() != MOVE_LEFT)
-					sprite->changeAnimation(MOVE_LEFT);
+				posEnemy.x -= 1;
+				
+				bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
+				int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
+				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
+				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
+
+				if(hitWall || cliffAhead)
+				{
+					posEnemy.x += 1;
+					direction = MOVE_DIR_RIGHT;
+					if(sprite->animation() != MOVE_RIGHT)
+						sprite->changeAnimation(MOVE_RIGHT);
+					break;
+				}
+				else
+				{
+					if(sprite->animation() != MOVE_LEFT)
+						sprite->changeAnimation(MOVE_LEFT);
+				}
 			}
 		}
 	}
@@ -132,4 +156,14 @@ void Enemy::setPosition(const glm::vec2 &pos)
 {
 	posEnemy = pos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
+}
+
+void Enemy::die()
+{
+	if(bDying)
+		return;
+	bDying = true;
+	bDead = false;
+	dyingTime = 0;
+	sprite->changeAnimation(DIE);
 }

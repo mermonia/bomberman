@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include "Player.h"
 #include "Game.h"
+#include "Bomb.h"
 
 
 #define JUMP_ANGLE_STEP 4
@@ -21,9 +22,11 @@ Player::Player()
 	sprite = NULL;
 	spriteDeath = NULL;
 	map = NULL;
+	activeBombs = NULL;
 	spawnPos = glm::ivec2(0, 0);
 	bDying = false;
 	dyingTime = 0;
+	maxDyingTime = 1000;
 }
 
 Player::~Player()
@@ -80,12 +83,22 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 
 	// Cada cel·la és de 16x16 px: 16/64 = 0.25f (X), 16/32 = 0.50f (Y)
 	spriteDeath = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 0.50f), &spritesheetDeath, &shaderProgram);
-	spriteDeath->setNumberAnimations(1);
+	spriteDeath->setNumberAnimations(2);
 
-	// Animació de mort: els 4 fotogrames de la fila 0 (del primer a l'últim)
-	spriteDeath->setAnimationSpeed(0, 5);
+	// Animació 0: Mort per enemic (els 8 fotogrames d'abans)
+	// Fila 1 (segona fila, y = 0.50f): El personatge es gira i cau d'esquena (4 fotogrames)
+	// Fila 0 (primera fila, y = 0.00f): El personatge queda a terra i s'esvaeix en bombolles d'energia (4 fotogrames)
+	spriteDeath->setAnimationSpeed(0, 8);
+	// Fila 1:
 	spriteDeath->addKeyframe(0, glm::vec2(0.00f, 0.0f));
 	spriteDeath->addKeyframe(0, glm::vec2(0.75f, 0.50f));
+
+	// Animació 1: Mort per bomba (els fotogrames 2, 3 i 4 de la fila 0)
+	spriteDeath->setAnimationSpeed(1, 5);
+	spriteDeath->addKeyframe(1, glm::vec2(0.75f, 0.00f)); // Fotograma 2 (cercle vermell)
+	spriteDeath->addKeyframe(1, glm::vec2(0.50f, 0.00f)); // Fotograma 3 (esclat vermell)
+	spriteDeath->addKeyframe(1, glm::vec2(0.25f, 0.00f)); // Fotograma 4 (dispersió)
+
 	spriteDeath->changeAnimation(0);
 
 	tileMapDispl = tileMapPos;
@@ -100,8 +113,8 @@ void Player::update(int deltaTime)
 	{
 		spriteDeath->update(deltaTime);
 		dyingTime += deltaTime;
-		// Quan es completa l'animació dels 4 fotogrames (800ms), reapareix al punt d'inici
-		if(dyingTime >= 800)
+		// Quan es completa l'animació de mort (maxDyingTime), reapareix al punt d'inici
+		if(dyingTime >= maxDyingTime)
 		{
 			bDying = false;
 			posPlayer = spawnPos;
@@ -232,14 +245,21 @@ void Player::update(int deltaTime)
 			else
 			{
 				posPlayer.y = int(startY - 64 * sin(3.14159f * jumpAngle / 180.f));
-				bJumping = !map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), &posPlayer.y);
+				bJumping = !collisionDown(&posPlayer.y);
+				if(!bJumping)
+				{
+					if(sprite->animation() == JUMP_LEFT || sprite->animation() == FALL_LEFT)
+						sprite->changeAnimation(STAND_LEFT);
+					else if(sprite->animation() == JUMP_RIGHT || sprite->animation() == FALL_RIGHT)
+						sprite->changeAnimation(STAND_RIGHT);
+				}
 			}
 		}
 	}
 	else
 	{
 		posPlayer.y += FALL_STEP;
-		if(map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), &posPlayer.y))
+		if(collisionDown(&posPlayer.y))
 		{
 			if(sprite->animation() == JUMP_LEFT || sprite->animation() == FALL_LEFT)
 				sprite->changeAnimation(STAND_LEFT);
@@ -291,15 +311,53 @@ void Player::setPosition(const glm::vec2 &pos)
 		spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 }
 
-void Player::die()
+void Player::die(bool byBomb)
 {
 	if(bDying)
 		return;
 	bDying = true;
 	dyingTime = 0;
 	bJumping = false;
-	spriteDeath->changeAnimation(0);
+	if(byBomb)
+	{
+		maxDyingTime = 600;
+		spriteDeath->changeAnimation(1);
+	}
+	else
+	{
+		maxDyingTime = 1000;
+		spriteDeath->changeAnimation(0);
+	}
 	spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+}
+
+bool Player::collisionDown(int *posY)
+{
+	if(map != NULL && map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), posY))
+		return true;
+
+	if(activeBombs != NULL)
+	{
+		for(unsigned int i = 0; i < activeBombs->size(); i++)
+		{
+			Bomb *b = (*activeBombs)[i];
+			if(b != NULL && b->getState() == BOMB_TICKING)
+			{
+				glm::ivec2 bPos = b->getPosition();
+				// El jugador està sobre la bomba horitzontalment?
+				if(posPlayer.x + 14 > bPos.x && posPlayer.x + 2 < bPos.x + 16)
+				{
+					// Els peus estan a l'alçada de la part superior de la bomba?
+					if(*posY + 16 >= bPos.y && *posY + 16 <= bPos.y + 10)
+					{
+						*posY = bPos.y - 16;
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
 }
 
 
