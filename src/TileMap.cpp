@@ -21,6 +21,8 @@ TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProg
 {
 	map = NULL;
 	zeroBased = false;
+	airTile = 0;
+	playerSpawn = glm::ivec2(-1, -1);
 	loadLevel(levelFile);
 	prepareArrays(minCoords, program);
 }
@@ -85,8 +87,48 @@ bool TileMap::loadLevel(const string &levelFile)
 	sstream.str(line);
 	sstream >> tilesheetSize.x >> tilesheetSize.y;
 	tileTexSize = glm::vec2(1.f / tilesheetSize.x, 1.f / tilesheetSize.y);
-	
+
+	int declaredAirTile = -1;
+	playerSpawn = glm::ivec2(-1, -1);
+	enemySpawns.clear();
+
+	streampos rowStart = fin.tellg();
+	while(getline(fin, line))
+	{
+		if(!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+
+		string keyword;
+		sstream.clear();
+		sstream.str(line);
+		sstream >> keyword;
+
+		if(keyword == "AIR")
+		{
+			sstream >> declaredAirTile;
+		}
+		else if(keyword == "PLAYER")
+		{
+			sstream >> playerSpawn.x >> playerSpawn.y;
+		}
+		else if(keyword == "ENEMY")
+		{
+			EnemySpawn spawn;
+			sstream >> spawn.type >> spawn.tile.x >> spawn.tile.y;
+			enemySpawns.push_back(spawn);
+		}
+		else
+		{
+			break;
+		}
+
+		rowStart = fin.tellg();
+	}
+	fin.clear();
+	fin.seekg(rowStart);
+
 	zeroBased = (tilesheetSize.x > 2 || tilesheetFile.find("blocks4") != string::npos);
+	airTile = (declaredAirTile >= 0) ? declaredAirTile : (zeroBased ? 2 : 0);
 
 	map = new int[mapSize.x * mapSize.y];
 	if(zeroBased)
@@ -122,15 +164,7 @@ bool TileMap::loadLevel(const string &levelFile)
 
 bool TileMap::isSolidTile(int tile) const
 {
-	if(zeroBased)
-	{
-		// A level4 (blocks4), la textura 2 correspon al fons (aire transitable)
-		return (tile != 2);
-	}
-	else
-	{
-		return (tile != 0);
-	}
+	return (tile != airTile);
 }
 
 void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)

@@ -59,12 +59,24 @@ void Scene::init()
 	map = TileMap::createTileMap(assetPath("levels/level4.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
+	glm::ivec2 playerTile(INIT_PLAYER_X_TILES, INIT_PLAYER_Y_TILES);
+	if(map->hasPlayerSpawn())
+		playerTile = map->getPlayerSpawn();
+	player->setPosition(glm::vec2(playerTile.x * map->getTileSize(), playerTile.y * map->getTileSize()));
 	player->setTileMap(map);
 	player->setBombs(&bombs);
-	
-	addEnemy(INIT_ENEMY_X_TILES, INIT_ENEMY_Y_TILES);
-	addEnemyChaser(INIT_ENEMY_CHASER_X_TILES, INIT_ENEMY_CHASER_Y_TILES);
+
+	const vector<EnemySpawn> &spawns = map->getEnemySpawns();
+	if(spawns.empty())
+	{
+		addEnemy(INIT_ENEMY_X_TILES, INIT_ENEMY_Y_TILES);
+		addEnemyChaser(INIT_ENEMY_CHASER_X_TILES, INIT_ENEMY_CHASER_Y_TILES);
+	}
+	else
+	{
+		for(unsigned int i = 0; i < spawns.size(); i++)
+			addEnemyOfType(spawns[i].type, spawns[i].tile.x, spawns[i].tile.y);
+	}
 
 	cameraWidth = CAMERA_WIDTH;
 	cameraHeight = CAMERA_HEIGHT;
@@ -100,6 +112,16 @@ void Scene::addEnemyChaser(int tileX, int tileY)
 	newEnemyChaser->setTileMap(map);
 	newEnemyChaser->setPlayer(player);
 	enemies.push_back(newEnemyChaser);
+}
+
+void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
+{
+	if(type == "patrol")
+		addEnemy(tileX, tileY);
+	else if(type == "chaser")
+		addEnemyChaser(tileX, tileY);
+	else
+		cout << "Unknown ENEMY type in level file: " << type << endl;
 }
 
 void Scene::update(int deltaTime)

@@ -2,6 +2,7 @@
 #define _SCENE_INCLUDE
 
 
+#include <string>
 #include <vector>
 #include <glm/glm.hpp>
 #include "ShaderProgram.h"
@@ -35,6 +36,7 @@ public:
 
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
+	void addEnemyOfType(const std::string &type, int tileX, int tileY);
 	void dropBomb();
 
 private:

@@ -2,6 +2,8 @@
 #define _TILE_MAP_INCLUDE
 
 
+#include <string>
+#include <vector>
 #include <glm/glm.hpp>
 #include "Texture.h"
 #include "ShaderProgram.h"
@@ -11,6 +13,13 @@
 // simple format (see level01.txt for an example). With this information
 // it builds a single VBO that contains all tiles. As a result the render
 // method draws the whole map independently of what is visible.
+
+
+struct EnemySpawn
+{
+	std::string type;
+	glm::ivec2 tile;
+};
 
 
 class TileMap
@@ -32,6 +41,10 @@ public:
 	int getMapWidth() const { return mapSize.x; }
 	int getMapHeight() const { return mapSize.y; }
 	glm::ivec2 getMapSize() const { return mapSize; }
+
+	bool hasPlayerSpawn() const { return playerSpawn.x >= 0 && playerSpawn.y >= 0; }
+	glm::ivec2 getPlayerSpawn() const { return playerSpawn; }
+	const std::vector<EnemySpawn> &getEnemySpawns() const { return enemySpawns; }
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
@@ -55,6 +68,9 @@ private:
 	glm::vec2 tileTexSize;
 	int *map;
 	bool zeroBased;
+	int airTile;
+	glm::ivec2 playerSpawn;
+	std::vector<EnemySpawn> enemySpawns;
 
 };
 
