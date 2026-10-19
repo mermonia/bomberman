@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "TileMap.h"
+#include "AssetPath.h"
 
 
 using namespace std;
@@ -74,7 +75,7 @@ bool TileMap::loadLevel(const string &levelFile)
 	sstream.clear();
 	sstream.str(line);
 	sstream >> tilesheetFile;
-	tilesheet.loadFromFile(tilesheetFile, TEXTURE_PIXEL_FORMAT_RGBA);
+	tilesheet.loadFromFile(assetPath(tilesheetFile), TEXTURE_PIXEL_FORMAT_RGBA);
 	tilesheet.setWrapS(GL_CLAMP_TO_EDGE);
 	tilesheet.setWrapT(GL_CLAMP_TO_EDGE);
 	tilesheet.setMinFilter(GL_NEAREST);

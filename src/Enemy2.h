@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Enemy.h"
 #include "Player.h"
+#include "AssetPath.h"
 
 enum Enemy2Anims
 {
@@ -34,7 +35,7 @@ public:
 
 	virtual void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	{
-		spritesheet.loadFromFile("images/enemy2.png", TEXTURE_PIXEL_FORMAT_RGBA);
+		spritesheet.loadFromFile(assetPath("images/enemy2.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 		spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
 		spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
 		spritesheet.setMinFilter(GL_NEAREST);

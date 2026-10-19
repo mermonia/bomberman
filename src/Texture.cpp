@@ -1,4 +1,5 @@
-#include <SOIL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include "Texture.h"
 
 
@@ -22,14 +23,15 @@ Texture::~Texture()
 bool Texture::loadFromFile(const string &filename, PixelFormat format)
 {
 	unsigned char *image = NULL;
+	int channelsInFile;
 	
 	switch(format)
 	{
 	case TEXTURE_PIXEL_FORMAT_RGB:
-		image = SOIL_load_image(filename.c_str(), &widthTex, &heightTex, 0, SOIL_LOAD_RGB);
+		image = stbi_load(filename.c_str(), &widthTex, &heightTex, &channelsInFile, STBI_rgb);
 		break;
 	case TEXTURE_PIXEL_FORMAT_RGBA:
-		image = SOIL_load_image(filename.c_str(), &widthTex, &heightTex, 0, SOIL_LOAD_RGBA);
+		image = stbi_load(filename.c_str(), &widthTex, &heightTex, &channelsInFile, STBI_rgb_alpha);
 		break;
 	}
 	if(image == NULL)
@@ -46,7 +48,7 @@ bool Texture::loadFromFile(const string &filename, PixelFormat format)
 		break;
 	}
 	glGenerateMipmap(GL_TEXTURE_2D);
-	delete[] image;
+	stbi_image_free(image);
 	
 	return true;
 }

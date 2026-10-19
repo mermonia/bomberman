@@ -1,6 +1,7 @@
 #include <iostream>
 #include <GL/glew.h>
 #include "Enemy.h"
+#include "AssetPath.h"
 
 #define FALL_STEP 4
 
@@ -28,7 +29,7 @@ Enemy::~Enemy()
 
 void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
-	spritesheet.loadFromFile("images/enemy.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.loadFromFile(assetPath("images/enemy.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	
 	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 253.f;
 	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 632.f;

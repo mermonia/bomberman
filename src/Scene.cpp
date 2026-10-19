@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Scene.h"
+#include "AssetPath.h"
 #include "Game.h"
 
 
@@ -55,7 +56,7 @@ Scene::~Scene()
 void Scene::init()
 {
 	initShaders();
-	map = TileMap::createTileMap("levels/level4.txt", glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+	map = TileMap::createTileMap(assetPath("levels/level4.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
@@ -74,7 +75,7 @@ void Scene::init()
 	currentTime = 0.0f;
 
 	// Carregar textura de la bomba (bomba.png)
-	spritesheetBomb.loadFromFile("images/bomba.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setMinFilter(GL_NEAREST);
@@ -309,13 +310,13 @@ void Scene::initShaders()
 {
 	Shader vShader, fShader;
 
-	vShader.initFromFile(VERTEX_SHADER, "shaders/texture.vert");
+	vShader.initFromFile(VERTEX_SHADER, assetPath("shaders/texture.vert"));
 	if(!vShader.isCompiled())
 	{
 		cout << "Vertex Shader Error" << endl;
 		cout << "" << vShader.log() << endl << endl;
 	}
-	fShader.initFromFile(FRAGMENT_SHADER, "shaders/texture.frag");
+	fShader.initFromFile(FRAGMENT_SHADER, assetPath("shaders/texture.frag"));
 	if(!fShader.isCompiled())
 	{
 		cout << "Fragment Shader Error" << endl;
