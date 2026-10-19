@@ -41,7 +41,7 @@ Player::~Player()
 void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	bJumping = false;
-	spritesheet.loadFromFile(assetPath("images/bub.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.loadFromFile(assetPath("images/player.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 1.0f / 3.0f), &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(8);
 	
@@ -75,8 +75,8 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 		
 	sprite->changeAnimation(0);
 
-	// Spritesheet de mort (player_2.png - 64x32 px, 4 columnes x 2 files de 16x16)
-	spritesheetDeath.loadFromFile(assetPath("images/player_2.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	// Spritesheet de mort (player_death.png - 64x32 px, 4 columnes x 2 files de 16x16)
+	spritesheetDeath.loadFromFile(assetPath("images/player_death.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetDeath.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetDeath.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetDeath.setMinFilter(GL_NEAREST);

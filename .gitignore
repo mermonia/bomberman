@@ -427,3 +427,14 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+## Project-specific
+build/
+out/
+CMakeUserPresets.json
+
+# The Visual Studio solution is generated from CMake, never committed.
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

@@ -16,8 +16,8 @@
 #define INIT_ENEMY_X_TILES 10
 #define INIT_ENEMY_Y_TILES 2
 
-#define INIT_ENEMY2_X_TILES 4
-#define INIT_ENEMY2_Y_TILES 11
+#define INIT_ENEMY_CHASER_X_TILES 4
+#define INIT_ENEMY_CHASER_Y_TILES 11
 
 
 Scene::Scene()
@@ -64,7 +64,7 @@ void Scene::init()
 	player->setBombs(&bombs);
 	
 	addEnemy(INIT_ENEMY_X_TILES, INIT_ENEMY_Y_TILES);
-	addEnemy2(INIT_ENEMY2_X_TILES, INIT_ENEMY2_Y_TILES);
+	addEnemyChaser(INIT_ENEMY_CHASER_X_TILES, INIT_ENEMY_CHASER_Y_TILES);
 
 	cameraWidth = CAMERA_WIDTH;
 	cameraHeight = CAMERA_HEIGHT;
@@ -92,14 +92,14 @@ void Scene::addEnemy(int tileX, int tileY)
 	enemies.push_back(newEnemy);
 }
 
-void Scene::addEnemy2(int tileX, int tileY)
+void Scene::addEnemyChaser(int tileX, int tileY)
 {
-	Enemy2 *newEnemy2 = new Enemy2();
-	newEnemy2->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	newEnemy2->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
-	newEnemy2->setTileMap(map);
-	newEnemy2->setPlayer(player);
-	enemies.push_back(newEnemy2);
+	EnemyChaser *newEnemyChaser = new EnemyChaser();
+	newEnemyChaser->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	newEnemyChaser->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
+	newEnemyChaser->setTileMap(map);
+	newEnemyChaser->setPlayer(player);
+	enemies.push_back(newEnemyChaser);
 }
 
 void Scene::update(int deltaTime)

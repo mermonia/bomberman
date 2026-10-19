@@ -1,5 +1,5 @@
-#ifndef _ENEMY2_INCLUDE
-#define _ENEMY2_INCLUDE
+#ifndef _ENEMYCHASER_INCLUDE
+#define _ENEMYCHASER_INCLUDE
 
 #include <cmath>
 #include <glm/glm.hpp>
@@ -7,24 +7,24 @@
 #include "Player.h"
 #include "AssetPath.h"
 
-enum Enemy2Anims
+enum EnemyChaserAnims
 {
-	ENEMY2_WALK,
-	ENEMY2_CHASE,
-	ENEMY2_DIE
+	ENEMY_CHASER_WALK,
+	ENEMY_CHASER_CHASE,
+	ENEMY_CHASER_DIE
 };
 
-class Enemy2 : public Enemy
+class EnemyChaser : public Enemy
 {
 public:
-	Enemy2() : Enemy()
+	EnemyChaser() : Enemy()
 	{
 		player = NULL;
 		bChasing = false;
 		chaseCooldown = 0;
 	}
 
-	virtual ~Enemy2()
+	virtual ~EnemyChaser()
 	{
 	}
 
@@ -35,7 +35,7 @@ public:
 
 	virtual void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	{
-		spritesheet.loadFromFile(assetPath("images/enemy2.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+		spritesheet.loadFromFile(assetPath("images/enemy_chaser.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 		spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
 		spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
 		spritesheet.setMinFilter(GL_NEAREST);
@@ -52,26 +52,26 @@ public:
 		sprite->setNumberAnimations(3);
 
 		// Animació de patrulla normal (Fila 0: columnes 0, 1 i 2)
-		sprite->setAnimationSpeed(ENEMY2_WALK, 5);
-		sprite->addKeyframe(ENEMY2_WALK, glm::vec2(0.f * stepX, 0.f * stepY));
-		sprite->addKeyframe(ENEMY2_WALK, glm::vec2(1.f * stepX, 0.f * stepY));
-		sprite->addKeyframe(ENEMY2_WALK, glm::vec2(2.f * stepX, 0.f * stepY));
+		sprite->setAnimationSpeed(ENEMY_CHASER_WALK, 5);
+		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(0.f * stepX, 0.f * stepY));
+		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(1.f * stepX, 0.f * stepY));
+		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(2.f * stepX, 0.f * stepY));
 
 		// Animació de persecució ràpida (Fila 1: columnes 0, 1 i 2)
-		sprite->setAnimationSpeed(ENEMY2_CHASE, 10);
-		sprite->addKeyframe(ENEMY2_CHASE, glm::vec2(0.f * stepX, 1.f * stepY));
-		sprite->addKeyframe(ENEMY2_CHASE, glm::vec2(1.f * stepX, 1.f * stepY));
-		sprite->addKeyframe(ENEMY2_CHASE, glm::vec2(2.f * stepX, 1.f * stepY));
+		sprite->setAnimationSpeed(ENEMY_CHASER_CHASE, 10);
+		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(0.f * stepX, 1.f * stepY));
+		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(1.f * stepX, 1.f * stepY));
+		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(2.f * stepX, 1.f * stepY));
 
 		// Animació de mort (Columna 3: fila 0 i fila 1)
-		sprite->setAnimationSpeed(ENEMY2_DIE, 4);
-		sprite->addKeyframe(ENEMY2_DIE, glm::vec2(3.f * stepX, 0.f * stepY));
-		sprite->addKeyframe(ENEMY2_DIE, glm::vec2(3.f * stepX, 1.f * stepY));
+		sprite->setAnimationSpeed(ENEMY_CHASER_DIE, 4);
+		sprite->addKeyframe(ENEMY_CHASER_DIE, glm::vec2(3.f * stepX, 0.f * stepY));
+		sprite->addKeyframe(ENEMY_CHASER_DIE, glm::vec2(3.f * stepX, 1.f * stepY));
 
 		direction = MOVE_DIR_RIGHT;
 		bChasing = false;
 		chaseCooldown = 0;
-		sprite->changeAnimation(ENEMY2_WALK);
+		sprite->changeAnimation(ENEMY_CHASER_WALK);
 
 		tileMapDispl = tileMapPos;
 		sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
@@ -142,7 +142,7 @@ public:
 		}
 
 		// Canviar animació segons si persegueix o patrulla
-		int targetAnim = bChasing ? ENEMY2_CHASE : ENEMY2_WALK;
+		int targetAnim = bChasing ? ENEMY_CHASER_CHASE : ENEMY_CHASER_WALK;
 		if(sprite->animation() != targetAnim)
 			sprite->changeAnimation(targetAnim);
 
@@ -212,8 +212,8 @@ public:
 		}
 
 		// Orientació visual del sprite:
-		// Els fotogrames de patrulla (fila 0 de enemy2.png) miren cap a l'esquerra per defecte.
-		// Els fotogrames de persecució (fila 1 de enemy2.png) miren cap a la dreta per defecte.
+		// Els fotogrames de patrulla (fila 0 de enemy_chaser.png) miren cap a l'esquerra per defecte.
+		// Els fotogrames de persecució (fila 1 de enemy_chaser.png) miren cap a la dreta per defecte.
 		// Per tant, ajustem el flip per mirar sempre cap a on avança:
 		bool bFlip = bChasing ? (direction == MOVE_DIR_LEFT) : (direction == MOVE_DIR_RIGHT);
 		sprite->setFlipX(bFlip);
@@ -230,7 +230,7 @@ public:
 		dyingTime = 0;
 		if(sprite != NULL)
 			sprite->setFlipX(false);
-		sprite->changeAnimation(ENEMY2_DIE);
+		sprite->changeAnimation(ENEMY_CHASER_DIE);
 	}
 
 private:
@@ -239,4 +239,4 @@ private:
 	int chaseCooldown;
 };
 
-#endif // _ENEMY2_INCLUDE
+#endif // _ENEMYCHASER_INCLUDE

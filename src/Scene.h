@@ -8,7 +8,7 @@
 #include "TileMap.h"
 #include "Player.h"
 #include "Enemy.h"
-#include "Enemy2.h"
+#include "EnemyChaser.h"
 #include "Bomb.h"
 
 using std::vector;
@@ -34,7 +34,7 @@ public:
 	void render();
 
 	void addEnemy(int tileX, int tileY);
-	void addEnemy2(int tileX, int tileY);
+	void addEnemyChaser(int tileX, int tileY);
 	void dropBomb();
 
 private:

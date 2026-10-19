@@ -1,0 +1,70 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 21,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "linux-debug",
+			"displayName": "Linux Debug",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/linux-debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
+			}
+		},
+		{
+			"name": "linux-release",
+			"displayName": "Linux Release",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/linux-release",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
+			}
+		},
+		{
+			"name": "vs2022",
+			"displayName": "Visual Studio 2022 (x64)",
+			"generator": "Visual Studio 17 2022",
+			"architecture": "x64",
+			"binaryDir": "${sourceDir}/build/vs2022",
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "linux-debug",
+			"configurePreset": "linux-debug"
+		},
+		{
+			"name": "linux-release",
+			"configurePreset": "linux-release"
+		},
+		{
+			"name": "vs2022-debug",
+			"configurePreset": "vs2022",
+			"configuration": "Debug"
+		},
+		{
+			"name": "vs2022-release",
+			"configurePreset": "vs2022",
+			"configuration": "Release"
+		}
+	]
+}
