@@ -111,10 +111,8 @@ bool TileMap::loadLevel(const string &levelFile)
 				else
 					map[j*mapSize.x+i] = tile - int('0');
 			}
-			fin.get(tile);
-#ifndef _WIN32
-			fin.get(tile);
-#endif
+			while(fin.get(tile) && tile != '\n')
+				;
 		}
 	}
 	fin.close();
