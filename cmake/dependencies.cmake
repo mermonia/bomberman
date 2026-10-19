@@ -29,4 +29,8 @@ FetchContent_Declare(glew
 	GIT_SHALLOW TRUE
 )
 
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 FetchContent_MakeAvailable(glfw glm glew)
+
+unset(CMAKE_POLICY_VERSION_MINIMUM)
