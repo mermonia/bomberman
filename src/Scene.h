@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "EnemyChaser.h"
+#include "EnemyParachute.h"
 #include "Bomb.h"
 
 using std::vector;
@@ -36,6 +37,7 @@ public:
 
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
+	void addEnemyParachute(int tileX, int tileY);
 	void addEnemyOfType(const std::string &type, int tileX, int tileY);
 	void dropBomb();
 
