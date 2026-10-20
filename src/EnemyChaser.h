@@ -7,6 +7,8 @@
 #include "Player.h"
 #include "AssetPath.h"
 
+#define ENEMY_CHASE_SPEED 2.5f
+
 enum EnemyChaserAnims
 {
 	ENEMY_CHASER_WALK,
@@ -155,13 +157,10 @@ public:
 			// Velocitats:
 			// En persecució va més ràpid (1 píxel cada 12 ms, ~83 px/segon)
 			// En patrulla va més lent (1 píxel cada 26 ms, ~38 px/segon)
-			int stepTime = bChasing ? 12 : 26;
-			moveTimer += deltaTime;
+			int steps = moveStep(deltaTime, bChasing ? ENEMY_CHASE_SPEED : ENEMY_PATROL_SPEED);
 
-			while(moveTimer >= stepTime)
+			while(steps-- > 0)
 			{
-				moveTimer -= stepTime;
-
 				if(direction == MOVE_DIR_RIGHT)
 				{
 					posEnemy.x += 1;

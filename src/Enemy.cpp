@@ -3,6 +3,7 @@
 #include "Enemy.h"
 #include "AssetPath.h"
 
+#define TILE_SIZE 16
 #define FALL_STEP 4
 
 enum EnemyAnims
@@ -18,7 +19,7 @@ Enemy::Enemy()
 	bDying = false;
 	bDead = false;
 	dyingTime = 0;
-	moveTimer = 0;
+	moveRemainder = 0.f;
 }
 
 Enemy::~Enemy()
@@ -84,13 +85,10 @@ void Enemy::update(int deltaTime)
 	if(onGround && map != NULL)
 	{
 		// Moviment més lent: 1 píxel cada 26 ms (~38 px/segon)
-		moveTimer += deltaTime;
-		int stepTime = 26;
+		int steps = moveStep(deltaTime, ENEMY_PATROL_SPEED);
 
-		while(moveTimer >= stepTime)
+		while(steps-- > 0)
 		{
-			moveTimer -= stepTime;
-
 			if(direction == MOVE_DIR_RIGHT)
 			{
 				posEnemy.x += 1;
@@ -141,6 +139,15 @@ void Enemy::update(int deltaTime)
 	}
 
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
+}
+
+int Enemy::moveStep(int deltaTime, float tilesPerSecond)
+{
+	moveRemainder += tilesPerSecond * TILE_SIZE * deltaTime / 1000.f;
+	int step = int(moveRemainder);
+	moveRemainder -= float(step);
+
+	return step;
 }
 
 void Enemy::render()

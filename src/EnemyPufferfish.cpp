@@ -3,7 +3,7 @@
 #include "EnemyPufferfish.h"
 #include "AssetPath.h"
 
-#define PUFFERFISH_STEP_TIME 30
+#define PUFFERFISH_DRIFT_SPEED 1.f
 #define PUFFERFISH_BOB_PERIOD 1600
 #define PUFFERFISH_BOB_AMPLITUDE 4
 #define PUFFERFISH_PUFF_RADIUS 48.f
@@ -110,12 +110,10 @@ void EnemyPufferfish::drift(int deltaTime)
 	if(map == NULL)
 		return;
 
-	moveTimer += deltaTime;
+	int steps = moveStep(deltaTime, PUFFERFISH_DRIFT_SPEED);
 
-	while(moveTimer >= PUFFERFISH_STEP_TIME)
+	while(steps-- > 0)
 	{
-		moveTimer -= PUFFERFISH_STEP_TIME;
-
 		if(direction == MOVE_DIR_RIGHT)
 		{
 			posEnemy.x += 1;
