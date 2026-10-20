@@ -31,6 +31,10 @@ Enemy::~Enemy()
 void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	spritesheet.loadFromFile(assetPath("images/e_basic.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheet.setMinFilter(GL_NEAREST);
+	spritesheet.setMagFilter(GL_NEAREST);
 	
 	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 253.f;
 	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 632.f;
