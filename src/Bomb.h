@@ -21,6 +21,7 @@ public:
 	{
 		state = BOMB_TICKING;
 		timer = 0;
+		bSolid = false;
 		tileCoords = tilePos;
 		tileMapDispl = tileMapPos;
 		map = tileMap;
@@ -167,6 +168,8 @@ public:
 
 	BombState getState() const { return state; }
 	bool isExploding() const { return state == BOMB_EXPLODING; }
+	bool isSolid() const { return bSolid; }
+	void setSolid(bool solid) { bSolid = solid; }
 	bool isFinished() const { return state == BOMB_FINISHED; }
 	glm::ivec2 getPosition() const { return glm::ivec2(int(pos.x), int(pos.y)); }
 	glm::ivec2 getTileCoords() const { return tileCoords; }
@@ -194,6 +197,7 @@ public:
 private:
 	BombState state;
 	int timer;
+	bool bSolid;
 	glm::ivec2 tileCoords;
 	glm::ivec2 tileMapDispl;
 	glm::vec2 pos;

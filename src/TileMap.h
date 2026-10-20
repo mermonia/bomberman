@@ -34,6 +34,7 @@ public:
 
 	~TileMap();
 
+	void update(int deltaTime);
 	void render() const;
 	void free();
 	
@@ -51,11 +52,24 @@ public:
 	bool collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
 	bool collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
 	bool isGround(int tileX, int tileY) const;
+	void clearDynamicSolids();
+	void setDynamicSolid(int tileX, int tileY);
+	void triggerBarrier(int tileX, int tileY);
 	
 private:
+	struct BarrierCollapse
+	{
+		int tileX;
+		int topY;
+		int clearY;
+		int timer;
+	};
+
 	bool loadLevel(const string &levelFile);
 	void prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program);
 	bool isSolidTile(int tile) const;
+	bool isBlockedTile(int tileX, int tileY) const;
+	bool isBarrierSegment(int tile) const;
 
 private:
 	GLuint vao;
@@ -67,10 +81,15 @@ private:
 	Texture tilesheet;
 	glm::vec2 tileTexSize;
 	int *map;
+	bool *dynamicSolid;
 	bool zeroBased;
 	int airTile;
 	glm::ivec2 playerSpawn;
 	std::vector<EnemySpawn> enemySpawns;
+	glm::vec2 renderMinCoords;
+	ShaderProgram *renderProgram;
+	int barrierTopTile, barrierBodyTile, barrierBaseTile;
+	std::vector<BarrierCollapse> collapsingBarriers;
 
 };
 
