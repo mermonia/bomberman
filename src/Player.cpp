@@ -50,6 +50,10 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	bJumping = false;
 	spritesheet.loadFromFile(assetPath("images/player.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheet.setMinFilter(GL_NEAREST);
+	spritesheet.setMagFilter(GL_NEAREST);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 1.0f / 3.0f), &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(8);
 	
