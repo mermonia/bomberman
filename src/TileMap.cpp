@@ -23,6 +23,7 @@ TileMap *TileMap::createTileMap(const string &levelFile, const glm::vec2 &minCoo
 TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
 {
 	map = NULL;
+	dynamicSolid = NULL;
 	zeroBased = false;
 	airTile = 0;
 	playerSpawn = glm::ivec2(-1, -1);
@@ -39,6 +40,8 @@ TileMap::~TileMap()
 {
 	if(map != NULL)
 		delete [] map;
+	if(dynamicSolid != NULL)
+		delete [] dynamicSolid;
 	free();
 }
 
@@ -169,6 +172,8 @@ bool TileMap::loadLevel(const string &levelFile)
 	airTile = (declaredAirTile >= 0) ? declaredAirTile : (zeroBased ? 2 : 0);
 
 	map = new int[mapSize.x * mapSize.y];
+	dynamicSolid = new bool[mapSize.x * mapSize.y];
+	clearDynamicSolids();
 	if(zeroBased)
 	{
 		for(int j=0; j<mapSize.y; j++)
@@ -273,7 +278,7 @@ bool TileMap::collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) c
 
 	for(int y=y0; y<=y1; y++)
 	{
-		if(isSolidTile(map[y*mapSize.x+x]))
+		if(isBlockedTile(x, y))
 			return true;
 	}
 	
@@ -294,7 +299,7 @@ bool TileMap::collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) 
 
 	for(int y=y0; y<=y1; y++)
 	{
-		if(isSolidTile(map[y*mapSize.x+x]))
+		if(isBlockedTile(x, y))
 			return true;
 	}
 	
@@ -314,7 +319,7 @@ bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, i
 
 	for(int x=x0; x<=x1; x++)
 	{
-		if(isSolidTile(map[y*mapSize.x+x]))
+		if(isBlockedTile(x, y))
 		{
 			if(*posY - tileSize * y + size.y <= 10)
 			{
@@ -345,7 +350,7 @@ bool TileMap::collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int
 
 	for(int x=x0; x<=x1; x++)
 	{
-		if(isSolidTile(map[y*mapSize.x+x]))
+		if(isBlockedTile(x, y))
 		{
 			*posY = tileSize * (y + 1);
 			return true;
@@ -360,6 +365,26 @@ bool TileMap::isGround(int tileX, int tileY) const
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
 	return isSolidTile(map[tileY * mapSize.x + tileX]);
+}
+
+bool TileMap::isBlockedTile(int tileX, int tileY) const
+{
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
+		return false;
+	return isSolidTile(map[tileY * mapSize.x + tileX]) || dynamicSolid[tileY * mapSize.x + tileX];
+}
+
+void TileMap::clearDynamicSolids()
+{
+	for(int i = 0; i < mapSize.x * mapSize.y; i++)
+		dynamicSolid[i] = false;
+}
+
+void TileMap::setDynamicSolid(int tileX, int tileY)
+{
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
+		return;
+	dynamicSolid[tileY * mapSize.x + tileX] = true;
 }
 
 bool TileMap::isBarrierSegment(int tile) const
