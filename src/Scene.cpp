@@ -164,6 +164,8 @@ void Scene::update(int deltaTime)
 	}
 
 	currentTime += deltaTime;
+	if(map != NULL)
+		map->update(deltaTime);
 	player->update(deltaTime);
 	for(int i = int(enemies.size()) - 1; i >= 0; i--)
 	{
@@ -284,6 +286,14 @@ void Scene::checkBombCollisions()
 						enemies[e]->die();
 					}
 				}
+			}
+
+			if(map != NULL)
+			{
+				const glm::ivec2 blast[5] = { glm::ivec2(0, 0), glm::ivec2(-1, 0), glm::ivec2(1, 0), glm::ivec2(0, -1), glm::ivec2(0, 1) };
+				glm::ivec2 bombTile = bombs[b]->getTileCoords();
+				for(int d = 0; d < 5; d++)
+					map->triggerBarrier(bombTile.x + blast[d].x, bombTile.y + blast[d].y);
 			}
 		}
 	}

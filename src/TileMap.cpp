@@ -9,6 +9,9 @@
 using namespace std;
 
 
+#define BARRIER_COLLAPSE_STEP 70
+
+
 TileMap *TileMap::createTileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
 {
 	TileMap *map = new TileMap(levelFile, minCoords, program);
@@ -23,6 +26,11 @@ TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProg
 	zeroBased = false;
 	airTile = 0;
 	playerSpawn = glm::ivec2(-1, -1);
+	renderMinCoords = minCoords;
+	renderProgram = &program;
+	barrierTopTile = -1;
+	barrierBodyTile = -1;
+	barrierBaseTile = -1;
 	loadLevel(levelFile);
 	prepareArrays(minCoords, program);
 }
@@ -34,6 +42,32 @@ TileMap::~TileMap()
 	free();
 }
 
+
+void TileMap::update(int deltaTime)
+{
+	bool bRebuild = false;
+
+	for(int i = int(collapsingBarriers.size()) - 1; i >= 0; i--)
+	{
+		BarrierCollapse &collapse = collapsingBarriers[i];
+		collapse.timer += deltaTime;
+		while(collapse.timer >= BARRIER_COLLAPSE_STEP && collapse.clearY >= collapse.topY)
+		{
+			collapse.timer -= BARRIER_COLLAPSE_STEP;
+			map[collapse.clearY * mapSize.x + collapse.tileX] = airTile;
+			collapse.clearY--;
+			bRebuild = true;
+		}
+		if(collapse.clearY < collapse.topY)
+			collapsingBarriers.erase(collapsingBarriers.begin() + i);
+	}
+
+	if(bRebuild)
+	{
+		free();
+		prepareArrays(renderMinCoords, *renderProgram);
+	}
+}
 
 void TileMap::render() const
 {
@@ -106,6 +140,10 @@ bool TileMap::loadLevel(const string &levelFile)
 		if(keyword == "AIR")
 		{
 			sstream >> declaredAirTile;
+		}
+		else if(keyword == "BARRIER")
+		{
+			sstream >> barrierTopTile >> barrierBodyTile >> barrierBaseTile;
 		}
 		else if(keyword == "PLAYER")
 		{
@@ -322,6 +360,36 @@ bool TileMap::isGround(int tileX, int tileY) const
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
 	return isSolidTile(map[tileY * mapSize.x + tileX]);
+}
+
+bool TileMap::isBarrierSegment(int tile) const
+{
+	return (barrierBodyTile >= 0 && tile == barrierBodyTile) || (barrierBaseTile >= 0 && tile == barrierBaseTile);
+}
+
+void TileMap::triggerBarrier(int tileX, int tileY)
+{
+	if(barrierTopTile < 0)
+		return;
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
+		return;
+	if(map[tileY * mapSize.x + tileX] != barrierTopTile)
+		return;
+
+	for(unsigned int i = 0; i < collapsingBarriers.size(); i++)
+	{
+		if(collapsingBarriers[i].tileX == tileX && collapsingBarriers[i].topY == tileY)
+			return;
+	}
+
+	BarrierCollapse collapse;
+	collapse.tileX = tileX;
+	collapse.topY = tileY;
+	collapse.clearY = tileY;
+	collapse.timer = 0;
+	while(collapse.clearY + 1 < mapSize.y && isBarrierSegment(map[(collapse.clearY + 1) * mapSize.x + tileX]))
+		collapse.clearY++;
+	collapsingBarriers.push_back(collapse);
 }
 
 
