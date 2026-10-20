@@ -29,12 +29,12 @@ Enemy::~Enemy()
 
 void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
-	spritesheet.loadFromFile(assetPath("images/enemy.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.loadFromFile(assetPath("images/e_basic.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	
 	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 253.f;
 	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 632.f;
 
-	// Cada sprite individual d'enemy.png és de 16x16 píxels, representat en un quad de 16x16
+	// Cada sprite individual d'e_basic.png és de 16x16 píxels, representat en un quad de 16x16
 	// per mantenir l'escala 1:1 dels blocs del mapa i del personatge (Player).
 	glm::vec2 sizeInSpritesheet(16.f / texW, 16.f / texH);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSpritesheet, &spritesheet, &shaderProgram);

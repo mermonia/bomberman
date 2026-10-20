@@ -35,7 +35,7 @@ public:
 
 	virtual void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	{
-		spritesheet.loadFromFile(assetPath("images/enemy_chaser.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+		spritesheet.loadFromFile(assetPath("images/e_chaser.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 		spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
 		spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
 		spritesheet.setMinFilter(GL_NEAREST);
@@ -212,8 +212,8 @@ public:
 		}
 
 		// Orientació visual del sprite:
-		// Els fotogrames de patrulla (fila 0 de enemy_chaser.png) miren cap a l'esquerra per defecte.
-		// Els fotogrames de persecució (fila 1 de enemy_chaser.png) miren cap a la dreta per defecte.
+		// Els fotogrames de patrulla (fila 0 de e_chaser.png) miren cap a l'esquerra per defecte.
+		// Els fotogrames de persecució (fila 1 de e_chaser.png) miren cap a la dreta per defecte.
 		// Per tant, ajustem el flip per mirar sempre cap a on avança:
 		bool bFlip = bChasing ? (direction == MOVE_DIR_LEFT) : (direction == MOVE_DIR_RIGHT);
 		sprite->setFlipX(bFlip);
