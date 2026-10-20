@@ -20,6 +20,7 @@ add_executable(bomberman
 	src/TileMap.cpp
 	src/Player.cpp
 	src/Enemy.cpp
+	src/EnemyParachute.cpp
 	src/EnemyPufferfish.cpp
 	src/Sprite.cpp
 	src/Texture.cpp
@@ -30,6 +31,7 @@ add_executable(bomberman
 	src/Bomb.h
 	src/Enemy.h
 	src/EnemyChaser.h
+	src/EnemyParachute.h
 	src/EnemyPufferfish.h
 	src/Game.h
 	src/Player.h
