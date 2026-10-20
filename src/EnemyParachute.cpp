@@ -3,9 +3,8 @@
 #include "AssetPath.h"
 
 #define FALL_STEP 4
-#define DESCENT_STEP_TIME 40
+#define PARACHUTE_DESCENT_SPEED 1.5f
 #define DRIFT_STEP_TIME 120
-#define PATROL_STEP_TIME 26
 
 enum EnemyParachuteAnims
 {
@@ -90,18 +89,16 @@ void EnemyParachute::update(int deltaTime)
 
 void EnemyParachute::updateDescent(int deltaTime)
 {
-	moveTimer += deltaTime;
+	int steps = moveStep(deltaTime, PARACHUTE_DESCENT_SPEED);
 
-	while(moveTimer >= DESCENT_STEP_TIME)
+	while(steps-- > 0)
 	{
-		moveTimer -= DESCENT_STEP_TIME;
-
 		posEnemy.y += 1;
 
 		if(map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y))
 		{
 			bLanded = true;
-			moveTimer = 0;
+			moveRemainder = 0.f;
 			driftTimer = 0;
 			sprite->changeAnimation(ENEMY_PARACHUTE_WALK);
 			return;
@@ -147,12 +144,10 @@ void EnemyParachute::updatePatrol(int deltaTime)
 	if(!onGround)
 		return;
 
-	moveTimer += deltaTime;
+	int steps = moveStep(deltaTime, ENEMY_PATROL_SPEED);
 
-	while(moveTimer >= PATROL_STEP_TIME)
+	while(steps-- > 0)
 	{
-		moveTimer -= PATROL_STEP_TIME;
-
 		if(direction == MOVE_DIR_RIGHT)
 		{
 			posEnemy.x += 1;
