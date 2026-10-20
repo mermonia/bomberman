@@ -435,6 +435,7 @@ CMakeUserPresets.json
 
 # The Visual Studio solution is generated from CMake, never committed.
 *.sln
+*.slnx
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user

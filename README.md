@@ -35,19 +35,27 @@ Arch that is `pacman -S cmake ninja`, on Debian/Ubuntu `apt install cmake ninja-
 
 Either way works:
 
-- **Open the folder in Visual Studio.** VS 2019+ configures CMake projects by itself; pick the
-  `vs2022` preset and press F5.
-- **Double-click `generate-vs.bat`.** It writes `build\vs2022\bomberman.sln` and opens it.
+- **Open the folder in Visual Studio.** VS 2019+ configures CMake projects by itself. Pick the
+  preset matching your VS version from the configuration dropdown — `vs2022` or `vs2026` — wait
+  for the configure to finish, then choose `bomberman.exe` in the **Select Startup Item**
+  dropdown next to the green play button and press F5. The startup list stays empty until a
+  configure succeeds, so check the CMake output window if nothing appears there.
+- **Double-click `generate-vs.bat`.** It writes a solution into `build\vs` and opens it. It
+  lets CMake pick whichever Visual Studio you have installed.
 
-There is no `.sln` in the repository on purpose — it is generated from `CMakeLists.txt`, which
-is the single source of truth for the build. Adding a source file means adding it to
+Pick the preset that matches your Visual Studio: the generator is version-specific, and
+configuring with the wrong one fails with `MSB8020: build tools ... cannot be found` rather
+than falling back. VS 2026 writes the newer `.slnx` solution format; VS 2022 writes `.sln`.
+
+There is no solution file in the repository on purpose — it is generated from `CMakeLists.txt`,
+which is the single source of truth for the build. Adding a source file means adding it to
 `CMakeLists.txt`, nothing else.
 
 ## Layout
 
 ```
 CMakeLists.txt        the build; the only place source files are listed
-CMakePresets.json     linux-debug, linux-release, vs2022
+CMakePresets.json     linux-debug, linux-release, vs2022, vs2026
 cmake/                dependencies.cmake -- all FetchContent lives here
 generate-vs.bat       convenience wrapper for the VS generator
 src/                  all game and engine code
