@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "EnemyChaser.h"
+#include "EnemyParachute.h"
 #include "EnemyPufferfish.h"
 #include "Bomb.h"
 
@@ -37,6 +38,7 @@ public:
 
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
+	void addEnemyParachute(int tileX, int tileY);
 	void addEnemyPufferfish(int tileX, int tileY);
 	void addEnemyOfType(const std::string &type, int tileX, int tileY);
 	void dropBomb();
