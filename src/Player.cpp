@@ -4,7 +4,6 @@
 #include "Player.h"
 #include "AssetPath.h"
 #include "Game.h"
-#include "Bomb.h"
 
 
 #define TILE_SIZE 16
@@ -28,7 +27,6 @@ Player::Player()
 	sprite = NULL;
 	spriteDeath = NULL;
 	map = NULL;
-	activeBombs = NULL;
 	spawnPos = glm::ivec2(0, 0);
 	jumpAngle = 0.f;
 	walkRemainder = 0.f;
@@ -366,31 +364,7 @@ int Player::fallStep(int deltaTime)
 
 bool Player::collisionDown(int *posY)
 {
-	if(map != NULL && map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), posY))
-		return true;
-
-	if(activeBombs != NULL)
-	{
-		for(unsigned int i = 0; i < activeBombs->size(); i++)
-		{
-			Bomb *b = (*activeBombs)[i];
-			if(b != NULL && b->getState() == BOMB_TICKING)
-			{
-				glm::ivec2 bPos = b->getPosition();
-				// El jugador està sobre la bomba horitzontalment?
-				if(posPlayer.x + 14 > bPos.x && posPlayer.x + 2 < bPos.x + 16)
-				{
-					// Els peus estan a l'alçada de la part superior de la bomba?
-					if(*posY + 16 >= bPos.y && *posY + 16 <= bPos.y + 10)
-					{
-						*posY = bPos.y - 16;
-						return true;
-					}
-				}
-			}
-		}
-	}
-	return false;
+	return map != NULL && map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), posY);
 }
 
 

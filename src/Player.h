@@ -2,7 +2,6 @@
 #define _PLAYER_INCLUDE
 
 
-#include <vector>
 #include "Sprite.h"
 #include "TileMap.h"
 
@@ -10,8 +9,6 @@
 // Player is basically a Sprite that represents the player. As such it has
 // all properties it needs to track its movement, jumping, and collisions.
 
-
-class Bomb;
 
 class Player
 {
@@ -26,7 +23,6 @@ public:
 	
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
-	void setBombs(std::vector<Bomb *> *bombs) { activeBombs = bombs; }
 	glm::vec2 getPosition() const { return glm::vec2(posPlayer); }
 	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
 	void die(bool byBomb = false);
@@ -49,7 +45,6 @@ private:
 	Sprite *sprite;
 	Sprite *spriteDeath;
 	TileMap *map;
-	std::vector<Bomb *> *activeBombs;
 
 };
 
