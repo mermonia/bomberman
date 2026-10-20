@@ -1,10 +1,14 @@
-#include "AssetPath.h"
-
+// The platform headers come first on purpose: <windows.h> declares its own
+// global `byte`, which clashes with std::byte (C2872) if the `using namespace
+// std;` from AssetPath.h is already in scope when it is parsed.
 #if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <unistd.h>
 #endif
+
+#include "AssetPath.h"
 
 
 using namespace std;
