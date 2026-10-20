@@ -17,8 +17,8 @@
 using std::vector;
 
 
-#define CAMERA_WIDTH 320.0f
-#define CAMERA_HEIGHT 240.0f
+#define CAMERA_WIDTH 160.0f
+#define CAMERA_HEIGHT 120.0f
 
 
 // Scene contains all the entities of our game.

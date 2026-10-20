@@ -34,13 +34,16 @@ public:
 	
 private:
 	bool collisionDown(int *posY);
+	int walkStep(int deltaTime);
+	int fallStep(int deltaTime);
 
 private:
 	bool bJumping;
 	bool bDying;
 	int dyingTime, maxDyingTime;
 	glm::ivec2 tileMapDispl, posPlayer, spawnPos;
-	int jumpAngle, startY;
+	float jumpAngle, walkRemainder, fallRemainder;
+	int startY;
 	Texture spritesheet;
 	Texture spritesheetDeath;
 	Sprite *sprite;

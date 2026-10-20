@@ -7,9 +7,14 @@
 #include "Bomb.h"
 
 
-#define JUMP_ANGLE_STEP 4
-#define JUMP_HEIGHT 96
-#define FALL_STEP 4
+#define TILE_SIZE 16
+
+#define WALK_SPEED 3.75f
+#define FALL_SPEED 15.f
+#define JUMP_HEIGHT_TILES 2
+#define JUMP_TIME 500
+
+#define JUMP_RISE (JUMP_HEIGHT_TILES * TILE_SIZE)
 
 
 enum PlayerAnims
@@ -25,6 +30,9 @@ Player::Player()
 	map = NULL;
 	activeBombs = NULL;
 	spawnPos = glm::ivec2(0, 0);
+	jumpAngle = 0.f;
+	walkRemainder = 0.f;
+	fallRemainder = 0.f;
 	bDying = false;
 	dyingTime = 0;
 	maxDyingTime = 1000;
@@ -42,6 +50,10 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	bJumping = false;
 	spritesheet.loadFromFile(assetPath("images/player.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheet.setMinFilter(GL_NEAREST);
+	spritesheet.setMagFilter(GL_NEAREST);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 1.0f / 3.0f), &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(8);
 	
@@ -153,10 +165,11 @@ void Player::update(int deltaTime)
 			if(sprite->animation() != MOVE_LEFT)
 				sprite->changeAnimation(MOVE_LEFT);
 		}
-		posPlayer.x -= 2;
+		int step = walkStep(deltaTime);
+		posPlayer.x -= step;
 		if(map->collisionMoveLeft(posPlayer, glm::ivec2(16, 16)))
 		{
-			posPlayer.x += 2;
+			posPlayer.x += step;
 			if(!bJumping && sprite->animation() != FALL_LEFT && sprite->animation() != FALL_RIGHT)
 				sprite->changeAnimation(STAND_LEFT);
 		}
@@ -186,10 +199,11 @@ void Player::update(int deltaTime)
 			if(sprite->animation() != MOVE_RIGHT)
 				sprite->changeAnimation(MOVE_RIGHT);
 		}
-		posPlayer.x += 2;
+		int step = walkStep(deltaTime);
+		posPlayer.x += step;
 		if(map->collisionMoveRight(posPlayer, glm::ivec2(16, 16)))
 		{
-			posPlayer.x -= 2;
+			posPlayer.x -= step;
 			if(!bJumping && sprite->animation() != FALL_LEFT && sprite->animation() != FALL_RIGHT)
 				sprite->changeAnimation(STAND_RIGHT);
 		}
@@ -217,14 +231,14 @@ void Player::update(int deltaTime)
 	
 	if(bJumping)
 	{
-		jumpAngle += JUMP_ANGLE_STEP;
+		jumpAngle += 180.f * deltaTime / JUMP_TIME;
 		if(jumpAngle <= 90)
 		{
-			posPlayer.y = int(startY - 64 * sin(3.14159f * jumpAngle / 180.f));
+			posPlayer.y = startY - int(JUMP_RISE * sin(3.14159f * jumpAngle / 180.f) + 0.5f);
 			if(map->collisionMoveUp(posPlayer, glm::ivec2(16, 16), &posPlayer.y))
 			{
-				jumpAngle = 90;
-				startY = posPlayer.y + 64;
+				jumpAngle = 90.f;
+				startY = posPlayer.y + JUMP_RISE;
 				if(sprite->animation() == JUMP_LEFT)
 					sprite->changeAnimation(FALL_LEFT);
 				else if(sprite->animation() == JUMP_RIGHT)
@@ -245,7 +259,7 @@ void Player::update(int deltaTime)
 			}
 			else
 			{
-				posPlayer.y = int(startY - 64 * sin(3.14159f * jumpAngle / 180.f));
+				posPlayer.y = startY - int(JUMP_RISE * sin(3.14159f * jumpAngle / 180.f) + 0.5f);
 				bJumping = !collisionDown(&posPlayer.y);
 				if(!bJumping)
 				{
@@ -259,7 +273,7 @@ void Player::update(int deltaTime)
 	}
 	else
 	{
-		posPlayer.y += FALL_STEP;
+		posPlayer.y += fallStep(deltaTime);
 		if(collisionDown(&posPlayer.y))
 		{
 			if(sprite->animation() == JUMP_LEFT || sprite->animation() == FALL_LEFT)
@@ -270,7 +284,7 @@ void Player::update(int deltaTime)
 			if(Game::instance().getKey(GLFW_KEY_UP))
 			{
 				bJumping = true;
-				jumpAngle = 0;
+				jumpAngle = 0.f;
 				startY = posPlayer.y;
 				if(sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT || sprite->animation() == FALL_LEFT)
 					sprite->changeAnimation(JUMP_LEFT);
@@ -330,6 +344,24 @@ void Player::die(bool byBomb)
 		spriteDeath->changeAnimation(0);
 	}
 	spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+}
+
+int Player::walkStep(int deltaTime)
+{
+	walkRemainder += WALK_SPEED * TILE_SIZE * deltaTime / 1000.f;
+	int step = int(walkRemainder);
+	walkRemainder -= float(step);
+
+	return step;
+}
+
+int Player::fallStep(int deltaTime)
+{
+	fallRemainder += FALL_SPEED * TILE_SIZE * deltaTime / 1000.f;
+	int step = int(fallRemainder);
+	fallRemainder -= float(step);
+
+	return step;
 }
 
 bool Player::collisionDown(int *posY)

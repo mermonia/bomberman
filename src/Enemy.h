@@ -9,6 +9,8 @@
 // It moves horizontally until it hits a wall or reaches a cliff (precipice),
 // at which point it turns around and moves in the opposite direction.
 
+#define ENEMY_PATROL_SPEED 1.25f
+
 enum EnemyDirection
 {
 	MOVE_DIR_LEFT, MOVE_DIR_RIGHT
@@ -33,6 +35,9 @@ public:
 	bool isDead() const { return bDead; }
 
 protected:
+	int moveStep(int deltaTime, float tilesPerSecond);
+
+protected:
 	glm::ivec2 tileMapDispl, posEnemy;
 	Texture spritesheet;
 	Sprite *sprite;
@@ -41,7 +46,7 @@ protected:
 	bool bDying;
 	bool bDead;
 	int dyingTime;
-	int moveTimer;
+	float moveRemainder;
 };
 
 #endif // _ENEMY_INCLUDE
