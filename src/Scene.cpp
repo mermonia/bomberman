@@ -56,7 +56,7 @@ Scene::~Scene()
 void Scene::init()
 {
 	initShaders();
-	map = TileMap::createTileMap(assetPath("levels/level4.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+	map = TileMap::createTileMap(assetPath("levels/level1.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	glm::ivec2 playerTile(INIT_PLAYER_X_TILES, INIT_PLAYER_Y_TILES);
