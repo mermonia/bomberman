@@ -56,7 +56,7 @@ Scene::~Scene()
 void Scene::init()
 {
 	initShaders();
-	map = TileMap::createTileMap(assetPath("levels/level4.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+	map = TileMap::createTileMap(assetPath("levels/level02.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	glm::ivec2 playerTile(INIT_PLAYER_X_TILES, INIT_PLAYER_Y_TILES);
@@ -114,12 +114,24 @@ void Scene::addEnemyChaser(int tileX, int tileY)
 	enemies.push_back(newEnemyChaser);
 }
 
+void Scene::addEnemyPufferfish(int tileX, int tileY)
+{
+	EnemyPufferfish *newEnemyPufferfish = new EnemyPufferfish();
+	newEnemyPufferfish->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	newEnemyPufferfish->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
+	newEnemyPufferfish->setTileMap(map);
+	newEnemyPufferfish->setPlayer(player);
+	enemies.push_back(newEnemyPufferfish);
+}
+
 void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
 {
 	if(type == "patrol")
 		addEnemy(tileX, tileY);
 	else if(type == "chaser")
 		addEnemyChaser(tileX, tileY);
+	else if(type == "pufferfish")
+		addEnemyPufferfish(tileX, tileY);
 	else
 		cout << "Unknown ENEMY type in level file: " << type << endl;
 }
