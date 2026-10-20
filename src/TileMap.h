@@ -52,6 +52,8 @@ public:
 	bool collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
 	bool collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
 	bool isGround(int tileX, int tileY) const;
+	void clearDynamicSolids();
+	void setDynamicSolid(int tileX, int tileY);
 	void triggerBarrier(int tileX, int tileY);
 	
 private:
@@ -66,6 +68,7 @@ private:
 	bool loadLevel(const string &levelFile);
 	void prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program);
 	bool isSolidTile(int tile) const;
+	bool isBlockedTile(int tileX, int tileY) const;
 	bool isBarrierSegment(int tile) const;
 
 private:
@@ -78,6 +81,7 @@ private:
 	Texture tilesheet;
 	glm::vec2 tileTexSize;
 	int *map;
+	bool *dynamicSolid;
 	bool zeroBased;
 	int airTile;
 	glm::ivec2 playerSpawn;

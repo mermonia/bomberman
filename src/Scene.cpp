@@ -64,7 +64,6 @@ void Scene::init()
 		playerTile = map->getPlayerSpawn();
 	player->setPosition(glm::vec2(playerTile.x * map->getTileSize(), playerTile.y * map->getTileSize()));
 	player->setTileMap(map);
-	player->setBombs(&bombs);
 
 	const vector<EnemySpawn> &spawns = map->getEnemySpawns();
 	if(spawns.empty())
@@ -166,6 +165,7 @@ void Scene::update(int deltaTime)
 	currentTime += deltaTime;
 	if(map != NULL)
 		map->update(deltaTime);
+	updateBombSolids();
 	player->update(deltaTime);
 	for(int i = int(enemies.size()) - 1; i >= 0; i--)
 	{
@@ -247,6 +247,56 @@ void Scene::dropBomb()
 
 	Bomb *newBomb = new Bomb(glm::ivec2(tileX, tileY), glm::ivec2(SCREEN_X, SCREEN_Y), &spritesheetBomb, &texProgram, map);
 	bombs.push_back(newBomb);
+}
+
+void Scene::updateBombSolids()
+{
+	if(map == NULL)
+		return;
+
+	map->clearDynamicSolids();
+	for(unsigned int b = 0; b < bombs.size(); b++)
+	{
+		if(bombs[b] == NULL || bombs[b]->getState() != BOMB_TICKING)
+			continue;
+
+		if(!bombs[b]->isSolid() && !isTileOccupiedByEntity(bombs[b]->getPosition()))
+			bombs[b]->setSolid(true);
+
+		if(bombs[b]->isSolid())
+		{
+			glm::ivec2 tile = bombs[b]->getTileCoords();
+			map->setDynamicSolid(tile.x, tile.y);
+		}
+	}
+}
+
+bool Scene::isTileOccupiedByEntity(const glm::ivec2 &tilePixelPos) const
+{
+	const int tileSize = 16;
+
+	if(player != NULL && !player->isDying())
+	{
+		glm::ivec2 pPos = glm::ivec2(player->getPosition());
+		glm::ivec2 pSize = player->getSize();
+		if(pPos.x < tilePixelPos.x + tileSize && pPos.x + pSize.x > tilePixelPos.x &&
+		   pPos.y < tilePixelPos.y + tileSize && pPos.y + pSize.y > tilePixelPos.y)
+			return true;
+	}
+
+	for(unsigned int i = 0; i < enemies.size(); i++)
+	{
+		if(enemies[i] == NULL || enemies[i]->isDead())
+			continue;
+
+		glm::ivec2 ePos = enemies[i]->getPosition();
+		glm::ivec2 eSize = enemies[i]->getSize();
+		if(ePos.x < tilePixelPos.x + tileSize && ePos.x + eSize.x > tilePixelPos.x &&
+		   ePos.y < tilePixelPos.y + tileSize && ePos.y + eSize.y > tilePixelPos.y)
+			return true;
+	}
+
+	return false;
 }
 
 void Scene::checkBombCollisions()

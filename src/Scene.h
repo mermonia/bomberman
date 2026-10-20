@@ -48,6 +48,8 @@ private:
 	void updateCamera();
 	void checkCollisions();
 	void checkBombCollisions();
+	void updateBombSolids();
+	bool isTileOccupiedByEntity(const glm::ivec2 &tilePixelPos) const;
 
 private:
 	TileMap *map;
