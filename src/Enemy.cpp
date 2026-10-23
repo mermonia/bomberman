@@ -147,9 +147,14 @@ void Enemy::update(int deltaTime)
 
 int Enemy::moveStep(int deltaTime, float tilesPerSecond)
 {
-	moveRemainder += tilesPerSecond * TILE_SIZE * deltaTime / 1000.f;
-	int step = int(moveRemainder);
-	moveRemainder -= float(step);
+	return moveStep(deltaTime, tilesPerSecond, moveRemainder);
+}
+
+int Enemy::moveStep(int deltaTime, float tilesPerSecond, float &remainder)
+{
+	remainder += tilesPerSecond * TILE_SIZE * deltaTime / 1000.f;
+	int step = int(remainder);
+	remainder -= float(step);
 
 	return step;
 }
