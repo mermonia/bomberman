@@ -119,6 +119,7 @@ void Scene::addEnemyParachute(int tileX, int tileY)
 	newEnemyParachute->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	newEnemyParachute->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
 	newEnemyParachute->setTileMap(map);
+	newEnemyParachute->setPlayer(player);
 	enemies.push_back(newEnemyParachute);
 }
 
