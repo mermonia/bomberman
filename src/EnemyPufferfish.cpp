@@ -3,10 +3,17 @@
 #include "EnemyPufferfish.h"
 #include "AssetPath.h"
 
-#define PUFFERFISH_DRIFT_SPEED 1.f
+#define TILE_SIZE 16
+#define PUFFERFISH_SWIM_SPEED 1.f
+#define PUFFERFISH_RETURN_SPEED 1.5f
+#define PUFFERFISH_LUNGE_SPEED 0.9f
+#define PUFFERFISH_RANGE_TILES 4
 #define PUFFERFISH_BOB_PERIOD 1600
 #define PUFFERFISH_BOB_AMPLITUDE 4
-#define PUFFERFISH_PUFF_RADIUS 48.f
+#define PUFFERFISH_PUFF_RADIUS 64.f
+#define PUFFERFISH_GIVE_UP_RADIUS 112.f
+#define PUFFERFISH_PUFF_TIME 2200
+#define PUFFERFISH_PUFF_COOLDOWN 1500
 
 enum EnemyPufferfishAnims
 {
@@ -19,9 +26,13 @@ EnemyPufferfish::EnemyPufferfish() : Enemy()
 {
 	player = NULL;
 	bPuffed = false;
-	bBaseYSet = false;
+	bHomeSet = false;
+	homeX = 0;
 	baseY = 0;
 	bobTimer = 0;
+	puffTimer = 0;
+	puffCooldown = 0;
+	verticalRemainder = 0.f;
 }
 
 EnemyPufferfish::~EnemyPufferfish()
@@ -63,8 +74,11 @@ void EnemyPufferfish::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderPr
 
 	direction = MOVE_DIR_LEFT;
 	bPuffed = false;
-	bBaseYSet = false;
+	bHomeSet = false;
 	bobTimer = 0;
+	puffTimer = 0;
+	puffCooldown = 0;
+	verticalRemainder = 0.f;
 	sprite->changeAnimation(ENEMY_PUFFERFISH_SWIM);
 
 	tileMapDispl = tileMapPos;
@@ -105,55 +119,76 @@ bool EnemyPufferfish::stepVertical(int dy)
 	return true;
 }
 
-void EnemyPufferfish::drift(int deltaTime)
+bool EnemyPufferfish::stepHorizontal(int dx)
 {
 	if(map == NULL)
-		return;
+		return false;
 
-	int steps = moveStep(deltaTime, PUFFERFISH_DRIFT_SPEED);
-
-	while(steps-- > 0)
+	posEnemy.x += dx;
+	bool blocked = (dx > 0) ? map->collisionMoveRight(posEnemy, glm::ivec2(16, 16))
+	                        : map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
+	if(blocked)
 	{
-		if(direction == MOVE_DIR_RIGHT)
-		{
-			posEnemy.x += 1;
-			if(map->collisionMoveRight(posEnemy, glm::ivec2(16, 16)))
-			{
-				posEnemy.x -= 1;
-				direction = MOVE_DIR_LEFT;
-				break;
-			}
-		}
-		else
-		{
-			posEnemy.x -= 1;
-			if(map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16)))
-			{
-				posEnemy.x += 1;
-				direction = MOVE_DIR_RIGHT;
-				break;
-			}
-		}
+		posEnemy.x -= dx;
+		return false;
+	}
+
+	return true;
+}
+
+void EnemyPufferfish::moveVerticallyTowards(int targetY, int deltaTime, float tilesPerSecond)
+{
+	int steps = moveStep(deltaTime, tilesPerSecond, verticalRemainder);
+
+	while(steps-- > 0 && posEnemy.y != targetY)
+	{
+		if(!stepVertical(posEnemy.y < targetY ? 1 : -1))
+			break;
 	}
 }
 
-void EnemyPufferfish::bob(int deltaTime)
+void EnemyPufferfish::swim(int deltaTime)
 {
+	int leftBound = homeX - PUFFERFISH_RANGE_TILES * TILE_SIZE;
+	int rightBound = homeX + PUFFERFISH_RANGE_TILES * TILE_SIZE;
+	int steps = moveStep(deltaTime, PUFFERFISH_SWIM_SPEED);
+
+	while(steps-- > 0)
+	{
+		if(direction == MOVE_DIR_RIGHT && posEnemy.x >= rightBound)
+			direction = MOVE_DIR_LEFT;
+		else if(direction == MOVE_DIR_LEFT && posEnemy.x <= leftBound)
+			direction = MOVE_DIR_RIGHT;
+
+		if(!stepHorizontal(direction == MOVE_DIR_RIGHT ? 1 : -1))
+		{
+			direction = (direction == MOVE_DIR_RIGHT) ? MOVE_DIR_LEFT : MOVE_DIR_RIGHT;
+			break;
+		}
+	}
+
 	bobTimer = (bobTimer + deltaTime) % PUFFERFISH_BOB_PERIOD;
-
 	float phase = 2.f * 3.14159265f * float(bobTimer) / float(PUFFERFISH_BOB_PERIOD);
-	int target = baseY + int(std::lround(float(PUFFERFISH_BOB_AMPLITUDE) * std::sin(phase)));
+	int targetY = baseY + int(std::lround(float(PUFFERFISH_BOB_AMPLITUDE) * std::sin(phase)));
+	moveVerticallyTowards(targetY, deltaTime, PUFFERFISH_RETURN_SPEED);
+}
 
-	while(posEnemy.y < target)
+void EnemyPufferfish::lunge(int deltaTime)
+{
+	glm::vec2 pPos = player->getPosition();
+	int targetX = int(pPos.x);
+	int targetY = int(pPos.y);
+
+	direction = (targetX >= posEnemy.x) ? MOVE_DIR_RIGHT : MOVE_DIR_LEFT;
+
+	int steps = moveStep(deltaTime, PUFFERFISH_LUNGE_SPEED);
+	while(steps-- > 0 && posEnemy.x != targetX)
 	{
-		if(!stepVertical(1))
+		if(!stepHorizontal(posEnemy.x < targetX ? 1 : -1))
 			break;
 	}
-	while(posEnemy.y > target)
-	{
-		if(!stepVertical(-1))
-			break;
-	}
+
+	moveVerticallyTowards(targetY, deltaTime, PUFFERFISH_LUNGE_SPEED);
 }
 
 void EnemyPufferfish::update(int deltaTime)
@@ -170,22 +205,46 @@ void EnemyPufferfish::update(int deltaTime)
 		return;
 	}
 
-	if(!bBaseYSet)
+	if(!bHomeSet)
 	{
+		homeX = posEnemy.x;
 		baseY = posEnemy.y;
-		bBaseYSet = true;
+		bHomeSet = true;
 	}
 
-	bPuffed = playerIsNear();
+	if(puffCooldown > 0)
+		puffCooldown -= deltaTime;
+
+	if(bPuffed)
+	{
+		puffTimer -= deltaTime;
+		bool bLostPlayer = true;
+		if(player != NULL && !player->isDying())
+		{
+			glm::vec2 pPos = player->getPosition();
+			bLostPlayer = glm::distance(glm::vec2(posEnemy), pPos) > PUFFERFISH_GIVE_UP_RADIUS;
+		}
+
+		if(puffTimer <= 0 || bLostPlayer)
+		{
+			bPuffed = false;
+			puffCooldown = PUFFERFISH_PUFF_COOLDOWN;
+		}
+	}
+	else if(puffCooldown <= 0 && playerIsNear())
+	{
+		bPuffed = true;
+		puffTimer = PUFFERFISH_PUFF_TIME;
+	}
 
 	int targetAnim = bPuffed ? ENEMY_PUFFERFISH_PUFF : ENEMY_PUFFERFISH_SWIM;
 	if(sprite->animation() != targetAnim)
 		sprite->changeAnimation(targetAnim);
 
-	if(!bPuffed)
-		drift(deltaTime);
-
-	bob(deltaTime);
+	if(bPuffed)
+		lunge(deltaTime);
+	else
+		swim(deltaTime);
 
 	sprite->setFlipX(direction == MOVE_DIR_RIGHT);
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
