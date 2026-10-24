@@ -20,15 +20,21 @@ public:
 private:
 	bool playerIsNear() const;
 	bool stepVertical(int dy);
-	void drift(int deltaTime);
-	void bob(int deltaTime);
+	bool stepHorizontal(int dx);
+	void swim(int deltaTime);
+	void lunge(int deltaTime);
+	void moveVerticallyTowards(int targetY, int deltaTime, float tilesPerSecond);
 
 private:
 	Player *player;
 	bool bPuffed;
-	bool bBaseYSet;
+	bool bHomeSet;
+	int homeX;
 	int baseY;
 	int bobTimer;
+	int puffTimer;
+	int puffCooldown;
+	float verticalRemainder;
 };
 
 #endif // _ENEMYPUFFERFISH_INCLUDE
