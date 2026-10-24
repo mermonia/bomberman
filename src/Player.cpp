@@ -32,6 +32,9 @@ Player::Player()
 	walkRemainder = 0.f;
 	fallRemainder = 0.f;
 	bDying = false;
+	bHasHeart = false;
+	invulnerableTime = 0;
+	walkSpeed = WALK_SPEED;
 	dyingTime = 0;
 	maxDyingTime = 1000;
 }
@@ -135,6 +138,13 @@ void Player::update(int deltaTime)
 			spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 		}
 		return;
+	}
+
+	if(invulnerableTime > 0)
+	{
+		invulnerableTime -= deltaTime;
+		if(invulnerableTime < 0)
+			invulnerableTime = 0;
 	}
 
 	sprite->update(deltaTime);
@@ -307,7 +317,10 @@ void Player::render()
 	if(bDying)
 		spriteDeath->render();
 	else
-		sprite->render();
+	{
+		if(invulnerableTime <= 0 || (invulnerableTime / 100) % 2 == 0)
+			sprite->render();
+	}
 }
 
 void Player::setTileMap(TileMap *tileMap)
@@ -331,6 +344,9 @@ void Player::die(bool byBomb)
 	bDying = true;
 	dyingTime = 0;
 	bJumping = false;
+	bHasHeart = false;
+	invulnerableTime = 0;
+	walkSpeed = WALK_SPEED;
 	if(byBomb)
 	{
 		maxDyingTime = 600;
@@ -346,7 +362,7 @@ void Player::die(bool byBomb)
 
 int Player::walkStep(int deltaTime)
 {
-	walkRemainder += WALK_SPEED * TILE_SIZE * deltaTime / 1000.f;
+	walkRemainder += walkSpeed * TILE_SIZE * deltaTime / 1000.f;
 	int step = int(walkRemainder);
 	walkRemainder -= float(step);
 

@@ -17,7 +17,7 @@ enum BombState
 class Bomb
 {
 public:
-	Bomb(const glm::ivec2 &tilePos, const glm::ivec2 &tileMapPos, Texture *spritesheet, ShaderProgram *program, TileMap *tileMap)
+	Bomb(const glm::ivec2 &tilePos, const glm::ivec2 &tileMapPos, Texture *spritesheet, ShaderProgram *program, TileMap *tileMap, int flameRadius = 1)
 	{
 		state = BOMB_TICKING;
 		timer = 0;
@@ -25,6 +25,7 @@ public:
 		tileCoords = tilePos;
 		tileMapDispl = tileMapPos;
 		map = tileMap;
+		radius = flameRadius;
 
 		int tileSize = map != NULL ? map->getTileSize() : 16;
 		pos = glm::vec2(float(tileCoords.x * tileSize), float(tileCoords.y * tileSize));
@@ -127,33 +128,37 @@ public:
 			float bx = float(tileMapDispl.x + pos.x);
 			float by = float(tileMapDispl.y + pos.y);
 
-			// Dalt (0 graus: ona expansiva cap amunt)
-			if(bExplodeUp)
+			for(int r = 1; r <= radius; r++)
 			{
-				spriteExplosion->setPosition(glm::vec2(bx + 2.f, by - 16.f));
-				spriteExplosion->setAngle(0.f);
-				spriteExplosion->render();
-			}
-			// Baix (180 graus: ona expansiva cap avall, compensant l'eix per centrar-la amb la de dalt)
-			if(bExplodeDown)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx - 2.f, by));
-				spriteExplosion->setAngle(180.f);
-				spriteExplosion->render();
-			}
-			// Dreta (90 graus: ona expansiva cap a la dreta, compensada verticalment)
-			if(bExplodeRight)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx + 8.f, by - 6.f));
-				spriteExplosion->setAngle(90.f);
-				spriteExplosion->render();
-			}
-			// Esquerra (270 graus: ona expansiva cap a l'esquerra, compensada verticalment)
-			if(bExplodeLeft)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx - 8.f, by - 9.f));
-				spriteExplosion->setAngle(270.f);
-				spriteExplosion->render();
+				float dist = float((r - 1) * 16);
+				// Dalt (0 graus: ona expansiva cap amunt)
+				if(bExplodeUp && (tileCoords.y - r >= 0))
+				{
+					spriteExplosion->setPosition(glm::vec2(bx + 2.f, by - 16.f - dist));
+					spriteExplosion->setAngle(0.f);
+					spriteExplosion->render();
+				}
+				// Baix (180 graus: ona expansiva cap avall)
+				if(bExplodeDown && (map == NULL || tileCoords.y + r < map->getMapHeight()))
+				{
+					spriteExplosion->setPosition(glm::vec2(bx - 2.f, by + dist));
+					spriteExplosion->setAngle(180.f);
+					spriteExplosion->render();
+				}
+				// Dreta (90 graus: ona expansiva cap a la dreta)
+				if(bExplodeRight && (map == NULL || tileCoords.x + r < map->getMapWidth()))
+				{
+					spriteExplosion->setPosition(glm::vec2(bx + 8.f + dist, by - 6.f));
+					spriteExplosion->setAngle(90.f);
+					spriteExplosion->render();
+				}
+				// Esquerra (270 graus: ona expansiva cap a l'esquerra)
+				if(bExplodeLeft && (tileCoords.x - r >= 0))
+				{
+					spriteExplosion->setPosition(glm::vec2(bx - 8.f - dist, by - 9.f));
+					spriteExplosion->setAngle(270.f);
+					spriteExplosion->render();
+				}
 			}
 
 			// Si està tancat en 4 parets, dibuixar l'explosió centrada
@@ -182,14 +187,17 @@ public:
 
 		if(bExplodeCenter)
 			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y)));
-		if(bExplodeLeft)
-			tiles.push_back(glm::ivec2(int(pos.x - 16), int(pos.y)));
-		if(bExplodeRight)
-			tiles.push_back(glm::ivec2(int(pos.x + 16), int(pos.y)));
-		if(bExplodeUp)
-			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y - 16)));
-		if(bExplodeDown)
-			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y + 16)));
+		for(int r = 1; r <= radius; r++)
+		{
+			if(bExplodeLeft && (tileCoords.x - r >= 0))
+				tiles.push_back(glm::ivec2(int(pos.x - r * 16), int(pos.y)));
+			if(bExplodeRight && (map == NULL || tileCoords.x + r < map->getMapWidth()))
+				tiles.push_back(glm::ivec2(int(pos.x + r * 16), int(pos.y)));
+			if(bExplodeUp && (tileCoords.y - r >= 0))
+				tiles.push_back(glm::ivec2(int(pos.x), int(pos.y - r * 16)));
+			if(bExplodeDown && (map == NULL || tileCoords.y + r < map->getMapHeight()))
+				tiles.push_back(glm::ivec2(int(pos.x), int(pos.y + r * 16)));
+		}
 
 		return tiles;
 	}
@@ -197,6 +205,7 @@ public:
 private:
 	BombState state;
 	int timer;
+	int radius;
 	bool bSolid;
 	glm::ivec2 tileCoords;
 	glm::ivec2 tileMapDispl;

@@ -1,6 +1,9 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Scene.h"
 #include "AssetPath.h"
@@ -24,7 +27,18 @@ Scene::Scene()
 {
 	map = NULL;
 	player = NULL;
+	powerUps.clear();
 	bBombKeyPressed = false;
+	bKKeyPressed = false;
+	bNumKeyPressed = false;
+	bLevelCleared = false;
+	levelClearTimer = 0;
+	currentLevel = 1;
+	maxSimultaneousBombs = 1;
+	bombFlameRadius = 1;
+	levelTimeRemaining = 215; // 3:35 com al joc original
+	levelTimerMs = 0;
+	playerLives = 2;          // 2 vides com a la captura de pantalla
 	cameraX = 0.f;
 	cameraY = 0.f;
 	cameraWidth = CAMERA_WIDTH;
@@ -50,20 +64,101 @@ Scene::~Scene()
 			delete bombs[i];
 	}
 	bombs.clear();
+	for(unsigned int i = 0; i < powerUps.size(); i++)
+	{
+		if(powerUps[i] != NULL)
+			delete powerUps[i];
+	}
+	powerUps.clear();
 }
 
 
 void Scene::init()
 {
 	initShaders();
-	map = TileMap::createTileMap(assetPath("levels/level1.txt"), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
-	player = new Player();
-	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+
+	// Carregar textura de la bomba (bomba.png)
+	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setMinFilter(GL_NEAREST);
+	spritesheetBomb.setMagFilter(GL_NEAREST);
+
+	// Carregar textura dels power-ups (power-ups.png)
+	spritesheetPowerUps.loadFromFile(assetPath("images/power-ups.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetPowerUps.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetPowerUps.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetPowerUps.setMinFilter(GL_NEAREST);
+	spritesheetPowerUps.setMagFilter(GL_NEAREST);
+
+	currentTime = 0.0f;
+	srand((unsigned int)time(NULL));
+	bBombKeyPressed = false;
+	bKKeyPressed = false;
+	bNumKeyPressed = false;
+	maxSimultaneousBombs = 1;
+	bombFlameRadius = 1;
+
+	hud.init(&texProgram);
+
+	loadLevel(1);
+}
+
+void Scene::loadLevel(int levelNumber)
+{
+	currentLevel = levelNumber;
+	if(currentLevel < 1) currentLevel = 1;
+	if(currentLevel > 4) currentLevel = 4;
+
+	levelTimeRemaining = 215;
+	levelTimerMs = 0;
+
+	// Netejar entitats del nivell anterior
+	for(unsigned int i = 0; i < powerUps.size(); i++)
+	{
+		if(powerUps[i] != NULL)
+			delete powerUps[i];
+	}
+	powerUps.clear();
+
+	for(unsigned int i = 0; i < bombs.size(); i++)
+	{
+		if(bombs[i] != NULL)
+			delete bombs[i];
+	}
+	bombs.clear();
+
+	for(unsigned int i = 0; i < enemies.size(); i++)
+	{
+		if(enemies[i] != NULL)
+			delete enemies[i];
+	}
+	enemies.clear();
+
+	if(map != NULL)
+	{
+		delete map;
+		map = NULL;
+	}
+
+	char levelFileName[64];
+	sprintf(levelFileName, "levels/level%02d.txt", currentLevel);
+	map = TileMap::createTileMap(assetPath(levelFileName), glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+
+	if(player == NULL)
+	{
+		player = new Player();
+		player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	}
+
 	glm::ivec2 playerTile(INIT_PLAYER_X_TILES, INIT_PLAYER_Y_TILES);
 	if(map->hasPlayerSpawn())
 		playerTile = map->getPlayerSpawn();
 	player->setPosition(glm::vec2(playerTile.x * map->getTileSize(), playerTile.y * map->getTileSize()));
 	player->setTileMap(map);
+
+	bLevelCleared = false;
+	levelClearTimer = 0;
 
 	const vector<EnemySpawn> &spawns = map->getEnemySpawns();
 	if(spawns.empty())
@@ -83,15 +178,14 @@ void Scene::init()
 	cameraY = 0.f;
 
 	updateCamera();
-	currentTime = 0.0f;
+}
 
-	// Carregar textura de la bomba (bomba.png)
-	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
-	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
-	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
-	spritesheetBomb.setMinFilter(GL_NEAREST);
-	spritesheetBomb.setMagFilter(GL_NEAREST);
-	bBombKeyPressed = false;
+void Scene::nextLevel()
+{
+	int next = currentLevel + 1;
+	if(next > 4)
+		next = 1;
+	loadLevel(next);
 }
 
 void Scene::addEnemy(int tileX, int tileY)
@@ -146,8 +240,87 @@ void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
 		cout << "Unknown ENEMY type in level file: " << type << endl;
 }
 
+void Scene::spawnPowerUp(int tileX, int tileY)
+{
+	// Evitar generar un power-up si ja n'hi ha un a la mateixa casella
+	for(unsigned int i = 0; i < powerUps.size(); i++)
+	{
+		if(powerUps[i] != NULL && powerUps[i]->getTileCoords() == glm::ivec2(tileX, tileY))
+			return;
+	}
+
+	// Ciclar ordenadament pels 4 tipus de power-up (Bomb Up, Heart, Fire Up, Speed Up)
+	static int nextType = 0;
+	PowerUpType type = (PowerUpType)(nextType % 4);
+	nextType++;
+
+	PowerUp *newPowerUp = new PowerUp(type, glm::ivec2(tileX, tileY), &spritesheetPowerUps, &texProgram);
+	powerUps.push_back(newPowerUp);
+}
+
+void Scene::applyPowerUp(PowerUpType type)
+{
+	switch(type)
+	{
+	case POWERUP_BOMB_UP:
+		maxSimultaneousBombs++;
+		break;
+	case POWERUP_HEART:
+		if(player != NULL)
+			player->giveHeart();
+		break;
+	case POWERUP_FIRE_UP:
+		bombFlameRadius++;
+		break;
+	case POWERUP_SPEED_UP:
+		if(player != NULL)
+			player->increaseSpeed(0.6f);
+		break;
+	}
+}
+
 void Scene::update(int deltaTime)
 {
+	// Tecles de trampa '1'..'4': anar directament als nivells corresponents
+	if(Game::instance().getKey(GLFW_KEY_1))
+	{
+		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(1); return; }
+	}
+	else if(Game::instance().getKey(GLFW_KEY_2))
+	{
+		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(2); return; }
+	}
+	else if(Game::instance().getKey(GLFW_KEY_3))
+	{
+		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(3); return; }
+	}
+	else if(Game::instance().getKey(GLFW_KEY_4))
+	{
+		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(4); return; }
+	}
+	else
+	{
+		bNumKeyPressed = false;
+	}
+
+	// Tecla de trampa 'K': matar tots els enemics i obrir la porta
+	if(Game::instance().getKey(GLFW_KEY_K))
+	{
+		if(!bKKeyPressed)
+		{
+			bKKeyPressed = true;
+			for(unsigned int i = 0; i < enemies.size(); i++)
+			{
+				if(enemies[i] != NULL && !enemies[i]->isDead() && !enemies[i]->isDying())
+					enemies[i]->die();
+			}
+		}
+	}
+	else
+	{
+		bKKeyPressed = false;
+	}
+
 	// Plantar bomba en prémer la lletra 'a'
 	if(Game::instance().getKey(GLFW_KEY_A))
 	{
@@ -163,10 +336,33 @@ void Scene::update(int deltaTime)
 	}
 
 	currentTime += deltaTime;
+
+	// Compte enrere del temporitzador de la barra inferior
+	if(levelTimeRemaining > 0)
+	{
+		levelTimerMs += deltaTime;
+		while(levelTimerMs >= 1000)
+		{
+			levelTimerMs -= 1000;
+			if(levelTimeRemaining > 0)
+			{
+				levelTimeRemaining--;
+				if(levelTimeRemaining == 0 && player != NULL && !player->isDying())
+				{
+					player->die(false);
+					if(playerLives > 0)
+						playerLives--;
+				}
+			}
+		}
+	}
+
 	if(map != NULL)
 		map->update(deltaTime);
 	updateBombSolids();
-	player->update(deltaTime);
+	if(player != NULL)
+		player->update(deltaTime);
+
 	for(int i = int(enemies.size()) - 1; i >= 0; i--)
 	{
 		if(enemies[i] != NULL)
@@ -177,6 +373,61 @@ void Scene::update(int deltaTime)
 				delete enemies[i];
 				enemies.erase(enemies.begin() + i);
 			}
+		}
+	}
+
+	// Comprovar si s'han eliminat tots els enemics del nivell per passar al següent nivell
+	int aliveEnemies = 0;
+	for(unsigned int i = 0; i < enemies.size(); i++)
+	{
+		if(enemies[i] != NULL && !enemies[i]->isDead())
+			aliveEnemies++;
+	}
+
+	if(aliveEnemies == 0 && !enemies.empty() && !bLevelCleared)
+	{
+		bLevelCleared = true;
+		levelClearTimer = 0;
+	}
+
+	if(bLevelCleared)
+	{
+		levelClearTimer += deltaTime;
+		if(levelClearTimer >= 800)
+		{
+			bLevelCleared = false;
+			nextLevel();
+			return;
+		}
+	}
+
+	// Actualitzar power-ups i comprovar recollida per part del jugador
+	if(player != NULL && !player->isDying())
+	{
+		glm::vec2 pPos = player->getPosition();
+		glm::ivec2 pSize = player->getSize();
+
+		for(int p = int(powerUps.size()) - 1; p >= 0; p--)
+		{
+			if(powerUps[p] != NULL)
+			{
+				powerUps[p]->update(deltaTime);
+				if(powerUps[p]->checkCollision(pPos, pSize))
+				{
+					applyPowerUp(powerUps[p]->getType());
+					powerUps[p]->collect();
+					delete powerUps[p];
+					powerUps.erase(powerUps.begin() + p);
+				}
+			}
+		}
+	}
+	else
+	{
+		for(unsigned int p = 0; p < powerUps.size(); p++)
+		{
+			if(powerUps[p] != NULL)
+				powerUps[p]->update(deltaTime);
 		}
 	}
 
@@ -201,7 +452,7 @@ void Scene::update(int deltaTime)
 
 void Scene::checkCollisions()
 {
-	if(player == NULL || player->isDying())
+	if(player == NULL || player->isDying() || player->isInvulnerable())
 		return;
 
 	glm::vec2 pPos = player->getPosition();
@@ -221,8 +472,18 @@ void Scene::checkCollisions()
 
 		if(collisionX && collisionY)
 		{
-			// El personatge sempre es mor quan toca un enemic
-			player->die();
+			// Si el personatge té l'escut del cor, el consumeix i sobreviu (sense matar l'enemic)
+			if(player->hasHeart())
+			{
+				player->consumeHeart();
+				player->setInvulnerable(1500); // 1.5s d'invulnerabilitat temporal per escapar de l'enemic
+			}
+			else
+			{
+				player->die();
+				if(playerLives > 0)
+					playerLives--;
+			}
 			break;
 		}
 	}
@@ -231,6 +492,10 @@ void Scene::checkCollisions()
 void Scene::dropBomb()
 {
 	if(player == NULL || map == NULL)
+		return;
+
+	// Respectar el límit de bombes simultànies (augmentat pel power-up Bomb Up)
+	if(int(bombs.size()) >= maxSimultaneousBombs)
 		return;
 
 	// Posició del jugador alineada al bloc més proper de 16x16
@@ -245,7 +510,7 @@ void Scene::dropBomb()
 			return;
 	}
 
-	Bomb *newBomb = new Bomb(glm::ivec2(tileX, tileY), glm::ivec2(SCREEN_X, SCREEN_Y), &spritesheetBomb, &texProgram, map);
+	Bomb *newBomb = new Bomb(glm::ivec2(tileX, tileY), glm::ivec2(SCREEN_X, SCREEN_Y), &spritesheetBomb, &texProgram, map, bombFlameRadius);
 	bombs.push_back(newBomb);
 }
 
@@ -320,6 +585,8 @@ void Scene::checkBombCollisions()
 					   (pPos.y < tPos.y + tSize.y) && (pPos.y + pSize.y > tPos.y))
 					{
 						player->die(true);
+						if(playerLives > 0)
+							playerLives--;
 					}
 				}
 
@@ -338,12 +605,43 @@ void Scene::checkBombCollisions()
 				}
 			}
 
+			// Destrucció d'arbustos/roques i aparició de power-ups amb l'ona expansiva
 			if(map != NULL)
 			{
-				const glm::ivec2 blast[5] = { glm::ivec2(0, 0), glm::ivec2(-1, 0), glm::ivec2(1, 0), glm::ivec2(0, -1), glm::ivec2(0, 1) };
 				glm::ivec2 bombTile = bombs[b]->getTileCoords();
-				for(int d = 0; d < 5; d++)
-					map->triggerBarrier(bombTile.x + blast[d].x, bombTile.y + blast[d].y);
+
+				// Destruir arbust o roca a la casella central de la bomba si n'hi ha
+				if(map->isBush(bombTile.x, bombTile.y))
+				{
+					map->destroyBush(bombTile.x, bombTile.y);
+					if((rand() % 100) < 40) // No sempre surt un power-up (40% de probabilitat)
+						spawnPowerUp(bombTile.x, bombTile.y);
+				}
+				map->triggerBarrier(bombTile.x, bombTile.y);
+
+				// 4 direccions amb abast bombFlameRadius
+				const glm::ivec2 directions[4] = { glm::ivec2(-1, 0), glm::ivec2(1, 0), glm::ivec2(0, -1), glm::ivec2(0, 1) };
+				for(int d = 0; d < 4; d++)
+				{
+					for(int r = 1; r <= bombFlameRadius; r++)
+					{
+						int tx = bombTile.x + directions[d].x * r;
+						int ty = bombTile.y + directions[d].y * r;
+
+						if(map->isBush(tx, ty))
+						{
+							map->destroyBush(tx, ty);
+							if((rand() % 100) < 40) // No sempre surt un power-up
+								spawnPowerUp(tx, ty);
+							break; // L'objecte absorbeix l'explosió
+						}
+						else if(map->isGround(tx, ty))
+						{
+							map->triggerBarrier(tx, ty);
+							break; // Paret sòlida atura el foc
+						}
+					}
+				}
 			}
 		}
 	}
@@ -397,18 +695,43 @@ void Scene::render()
 	modelview = glm::mat4(1.0f);
 	texProgram.setUniformMatrix4f("modelview", modelview);
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
-	map->render();
+
+	if(map != NULL)
+		map->render();
+
+	for(unsigned int i = 0; i < powerUps.size(); i++)
+	{
+		if(powerUps[i] != NULL)
+			powerUps[i]->render();
+	}
+
 	for(unsigned int i = 0; i < bombs.size(); i++)
 	{
 		if(bombs[i] != NULL)
 			bombs[i]->render();
 	}
-	player->render();
+
+	if(player != NULL)
+		player->render();
+
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
 		if(enemies[i] != NULL)
 			enemies[i]->render();
 	}
+
+	// Dibuixar la barra HUD inferior amb les icones de barra.png
+	int aliveEnemies = 0;
+	for(unsigned int i = 0; i < enemies.size(); i++)
+	{
+		if(enemies[i] != NULL && !enemies[i]->isDead())
+			aliveEnemies++;
+	}
+
+	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius);
+
+	// Restaurar la matriu de projecció ortogràfica de la càmera
+	texProgram.setUniformMatrix4f("projection", projection);
 }
 
 void Scene::initShaders()
@@ -440,6 +763,3 @@ void Scene::initShaders()
 	vShader.free();
 	fShader.free();
 }
-
-
-
