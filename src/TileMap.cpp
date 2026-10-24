@@ -27,6 +27,7 @@ TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProg
 	zeroBased = false;
 	airTile = 0;
 	playerSpawn = glm::ivec2(-1, -1);
+	bushTiles.clear();
 	renderMinCoords = minCoords;
 	renderProgram = &program;
 	barrierTopTile = -1;
@@ -152,6 +153,12 @@ bool TileMap::loadLevel(const string &levelFile)
 		{
 			sstream >> playerSpawn.x >> playerSpawn.y;
 		}
+		else if(keyword == "BUSH")
+		{
+			int bTile;
+			while(sstream >> bTile)
+				bushTiles.push_back(bTile);
+		}
 		else if(keyword == "ENEMY")
 		{
 			EnemySpawn spawn;
@@ -201,6 +208,25 @@ bool TileMap::loadLevel(const string &levelFile)
 		}
 	}
 	fin.close();
+
+	if(bushTiles.empty())
+	{
+		if(tilesheetFile.find("blocks1") != string::npos)
+			bushTiles.push_back(12);
+		else if(tilesheetFile.find("blocks2") != string::npos)
+		{
+			bushTiles.push_back(11);
+			bushTiles.push_back(19);
+		}
+		else if(tilesheetFile.find("blocks3") != string::npos)
+		{
+			bushTiles.push_back(8); // Nomes les roques al nivell 3
+		}
+		else if(tilesheetFile.find("blocks4") != string::npos)
+		{
+			bushTiles.push_back(1); // Nomes les cares al nivell 4
+		}
+	}
 	
 	return true;
 }
@@ -372,6 +398,29 @@ bool TileMap::isBlockedTile(int tileX, int tileY) const
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
 	return isSolidTile(map[tileY * mapSize.x + tileX]) || dynamicSolid[tileY * mapSize.x + tileX];
+}
+
+bool TileMap::isBush(int tileX, int tileY) const
+{
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
+		return false;
+	int t = map[tileY * mapSize.x + tileX];
+	for(unsigned int i = 0; i < bushTiles.size(); i++)
+	{
+		if(bushTiles[i] == t)
+			return true;
+	}
+	return false;
+}
+
+bool TileMap::destroyBush(int tileX, int tileY)
+{
+	if(!isBush(tileX, tileY))
+		return false;
+	map[tileY * mapSize.x + tileX] = airTile;
+	free();
+	prepareArrays(renderMinCoords, *renderProgram);
+	return true;
 }
 
 void TileMap::clearDynamicSolids()
