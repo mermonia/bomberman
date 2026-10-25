@@ -2,8 +2,10 @@
 #define _GAME_INCLUDE
 
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Scene.h"
+#include "MainMenu.h"
 
 
 #define SCREEN_WIDTH 640
@@ -21,7 +23,7 @@ class Game
 {
 
 private:
-	Game() {}
+	Game() : bPlay(true), state(STATE_MENU), bSceneInited(false) {}
 	
 public:
 	static Game &instance()
@@ -44,11 +46,17 @@ public:
 
 	bool getKey(int key) const;
 
+	GameState getState() const { return state; }
+	void setState(GameState s) { state = s; }
+
 private:
 	bool bPlay; // Continue to play game?
 	bool keys[GLFW_KEY_LAST+1]; // Store key states so that 
 							    // we can have access at any time
+	GameState state;
+	bool bSceneInited;
 	Scene scene;
+	MainMenu mainMenu;
 
 };
 

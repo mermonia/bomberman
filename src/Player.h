@@ -27,6 +27,8 @@ public:
 	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
 	void die(bool byBomb = false);
 	bool isDying() const { return bDying; }
+	void enterDoor();
+	bool isEnteringDoor() const { return bEnteringDoor; }
 	bool hasHeart() const { return bHasHeart; }
 	void giveHeart() { bHasHeart = true; }
 	void consumeHeart() { bHasHeart = false; }
@@ -43,6 +45,7 @@ private:
 private:
 	bool bJumping;
 	bool bDying;
+	bool bEnteringDoor;
 	bool bHasHeart;
 	int invulnerableTime;
 	float walkSpeed;

@@ -41,6 +41,8 @@ public:
 	void loadLevel(int levelNumber);
 	void nextLevel();
 	int getCurrentLevel() const { return currentLevel; }
+	bool isGameOver() const { return bGameOver; }
+	void resetGameOver() { bGameOver = false; bWaitingGameOver = false; bWaitingRestartLevel = false; }
 
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
@@ -59,6 +61,7 @@ private:
 	void checkBombCollisions();
 	void updateBombSolids();
 	bool isTileOccupiedByEntity(const glm::ivec2 &tilePixelPos) const;
+	void handlePlayerDeath(bool byBomb = false);
 
 private:
 	TileMap *map;
@@ -73,6 +76,10 @@ private:
 	bool bNumKeyPressed;
 	bool bLevelCleared;
 	int levelClearTimer;
+	bool bExitUnlocked;
+	bool bGameOver;
+	bool bWaitingGameOver;
+	bool bWaitingRestartLevel;
 	int currentLevel;
 	int maxSimultaneousBombs;
 	int bombFlameRadius;
