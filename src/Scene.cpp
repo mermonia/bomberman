@@ -33,6 +33,10 @@ Scene::Scene()
 	bNumKeyPressed = false;
 	bLevelCleared = false;
 	levelClearTimer = 0;
+	bExitUnlocked = false;
+	bGameOver = false;
+	bWaitingGameOver = false;
+	bWaitingRestartLevel = false;
 	currentLevel = 1;
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
@@ -96,6 +100,11 @@ void Scene::init()
 	bBombKeyPressed = false;
 	bKKeyPressed = false;
 	bNumKeyPressed = false;
+	bGameOver = false;
+	bWaitingGameOver = false;
+	bWaitingRestartLevel = false;
+	bExitUnlocked = false;
+	playerLives = 2;
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
 
@@ -110,6 +119,9 @@ void Scene::loadLevel(int levelNumber)
 	if(currentLevel < 1) currentLevel = 1;
 	if(currentLevel > 4) currentLevel = 4;
 
+	bGameOver = false;
+	bWaitingGameOver = false;
+	bWaitingRestartLevel = false;
 	levelTimeRemaining = 215;
 	levelTimerMs = 0;
 
@@ -156,9 +168,11 @@ void Scene::loadLevel(int levelNumber)
 		playerTile = map->getPlayerSpawn();
 	player->setPosition(glm::vec2(playerTile.x * map->getTileSize(), playerTile.y * map->getTileSize()));
 	player->setTileMap(map);
+	player->setInvulnerable(1500);
 
 	bLevelCleared = false;
 	levelClearTimer = 0;
+	bExitUnlocked = false;
 
 	const vector<EnemySpawn> &spawns = map->getEnemySpawns();
 	if(spawns.empty())
@@ -314,6 +328,7 @@ void Scene::update(int deltaTime)
 				if(enemies[i] != NULL && !enemies[i]->isDead() && !enemies[i]->isDying())
 					enemies[i]->die();
 			}
+			bExitUnlocked = true;
 		}
 	}
 	else
@@ -349,9 +364,7 @@ void Scene::update(int deltaTime)
 				levelTimeRemaining--;
 				if(levelTimeRemaining == 0 && player != NULL && !player->isDying())
 				{
-					player->die(false);
-					if(playerLives > 0)
-						playerLives--;
+					handlePlayerDeath(false);
 				}
 			}
 		}
@@ -362,6 +375,18 @@ void Scene::update(int deltaTime)
 	updateBombSolids();
 	if(player != NULL)
 		player->update(deltaTime);
+
+	if(bWaitingGameOver && player != NULL && !player->isDying())
+	{
+		bWaitingGameOver = false;
+		bGameOver = true;
+	}
+	else if(bWaitingRestartLevel && player != NULL && !player->isDying())
+	{
+		bWaitingRestartLevel = false;
+		loadLevel(currentLevel);
+		return;
+	}
 
 	for(int i = int(enemies.size()) - 1; i >= 0; i--)
 	{
@@ -376,18 +401,47 @@ void Scene::update(int deltaTime)
 		}
 	}
 
-	// Comprovar si s'han eliminat tots els enemics del nivell per passar al següent nivell
+	// Comprovar quants enemics vius queden al nivell
 	int aliveEnemies = 0;
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
-		if(enemies[i] != NULL && !enemies[i]->isDead())
+		if(enemies[i] != NULL && !enemies[i]->isDead() && !enemies[i]->isDying())
 			aliveEnemies++;
 	}
 
-	if(aliveEnemies == 0 && !enemies.empty() && !bLevelCleared)
+	// Quan no queda cap enemic viu, desbloquejar la sortida
+	if(aliveEnemies == 0 && !bLevelCleared)
 	{
+		bExitUnlocked = true;
+	}
+
+	// Comprovar si el jugador està davant de la porta
+	bool bPlayerAtDoor = false;
+	if(map != NULL && map->hasDoor() && player != NULL && !player->isDying())
+	{
+		glm::ivec2 doorTile = map->getDoorTile();
+		glm::vec2 pPos = player->getPosition();
+		glm::ivec2 pSize = player->getSize();
+
+		float pCenterX = pPos.x + float(pSize.x) * 0.5f;
+		float pCenterY = pPos.y + float(pSize.y) * 0.5f;
+		float doorCenterX = float(doorTile.x * map->getTileSize()) + float(map->getTileSize()) * 0.5f;
+		float doorCenterY = float(doorTile.y * map->getTileSize()) + float(map->getTileSize()) * 0.5f;
+
+		if(std::abs(pCenterX - doorCenterX) <= 12.0f && std::abs(pCenterY - doorCenterY) <= 14.0f)
+		{
+			bPlayerAtDoor = true;
+		}
+	}
+
+	// Quan la sortida està desbloquejada i el jugador es posa davant de la porta:
+	// Es mostra la imatge de player_death (animació porta) i es passa al següent nivell
+	if(bExitUnlocked && bPlayerAtDoor && !bLevelCleared && player != NULL && !player->isDying())
+	{
+		bExitUnlocked = false;
 		bLevelCleared = true;
 		levelClearTimer = 0;
+		player->enterDoor();
 	}
 
 	if(bLevelCleared)
@@ -450,6 +504,28 @@ void Scene::update(int deltaTime)
 	updateCamera();
 }
 
+void Scene::handlePlayerDeath(bool byBomb)
+{
+	if(player == NULL || player->isDying())
+		return;
+
+	player->die(byBomb);
+
+	// En morir, es perden els power-ups temporals com al joc original
+	maxSimultaneousBombs = 1;
+	bombFlameRadius = 1;
+
+	if(playerLives > 0)
+	{
+		playerLives--;
+		bWaitingRestartLevel = true;
+	}
+	else
+	{
+		bWaitingGameOver = true;
+	}
+}
+
 void Scene::checkCollisions()
 {
 	if(player == NULL || player->isDying() || player->isInvulnerable())
@@ -480,9 +556,7 @@ void Scene::checkCollisions()
 			}
 			else
 			{
-				player->die();
-				if(playerLives > 0)
-					playerLives--;
+				handlePlayerDeath(false);
 			}
 			break;
 		}
@@ -584,9 +658,7 @@ void Scene::checkBombCollisions()
 					if((pPos.x < tPos.x + tSize.x) && (pPos.x + pSize.x > tPos.x) &&
 					   (pPos.y < tPos.y + tSize.y) && (pPos.y + pSize.y > tPos.y))
 					{
-						player->die(true);
-						if(playerLives > 0)
-							playerLives--;
+						handlePlayerDeath(true);
 					}
 				}
 
@@ -720,15 +792,15 @@ void Scene::render()
 			enemies[i]->render();
 	}
 
-	// Dibuixar la barra HUD inferior amb les icones de barra.png
 	int aliveEnemies = 0;
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
-		if(enemies[i] != NULL && !enemies[i]->isDead())
+		if(enemies[i] != NULL && !enemies[i]->isDead() && !enemies[i]->isDying())
 			aliveEnemies++;
 	}
 
-	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius);
+	bool bShowExit = bExitUnlocked && !bLevelCleared && (player != NULL && !player->isDying());
+	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bShowExit, currentTime);
 
 	// Restaurar la matriu de projecció ortogràfica de la càmera
 	texProgram.setUniformMatrix4f("projection", projection);

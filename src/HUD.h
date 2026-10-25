@@ -24,13 +24,14 @@ public:
 	~HUD();
 
 	void init(ShaderProgram *program);
-	void render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius);
+	void render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bShowExit = false, float animTime = 0.0f);
 
 private:
 	void renderQuad(float x, float y, float width, float height, float u0, float v0, float u1, float v1);
 	void renderIcon(HUDIconType type, float x, float y, float size = 8.0f);
-	void renderChar(char c, float x, float y, float width = 8.0f, float height = 8.0f);
-	void renderString(const std::string &str, float x, float y, float charAdvance = 6.0f);
+	void renderChar(char c, float x, float y, float width = 8.0f, float height = 8.0f, const glm::vec4 &color = glm::vec4(1.0f));
+	void renderString(const std::string &str, float x, float y, float charAdvance = 6.0f, float width = 8.0f, float height = 8.0f, const glm::vec4 &color = glm::vec4(1.0f));
+	void renderExitPrompt(float animTime);
 
 private:
 	ShaderProgram *shaderProgram;
