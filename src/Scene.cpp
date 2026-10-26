@@ -81,8 +81,8 @@ void Scene::init()
 {
 	initShaders();
 
-	// Carregar textura de la bomba (bomba.png)
-	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	// Carregar textura de la bomba (bomba2.png)
+	spritesheetBomb.loadFromFile(assetPath("images/bomba2.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setMinFilter(GL_NEAREST);
@@ -335,6 +335,7 @@ void Scene::update(int deltaTime)
 	{
 		bKKeyPressed = false;
 	}
+
 
 	// Plantar bomba en prémer la lletra 'a'
 	if(Game::instance().getKey(GLFW_KEY_A))
@@ -650,7 +651,7 @@ void Scene::checkBombCollisions()
 				glm::vec2 tPos = glm::vec2(explTiles[t]);
 				glm::vec2 tSize(16.f, 16.f);
 
-				// 1. Matar el jugador si toca l'explosió
+				// 1. Detecció de col·lisió de l'explosió amb el jugador
 				if(player != NULL && !player->isDying())
 				{
 					glm::vec2 pPos = player->getPosition();
@@ -658,7 +659,19 @@ void Scene::checkBombCollisions()
 					if((pPos.x < tPos.x + tSize.x) && (pPos.x + pSize.x > tPos.x) &&
 					   (pPos.y < tPos.y + tSize.y) && (pPos.y + pSize.y > tPos.y))
 					{
-						handlePlayerDeath(true);
+						if(player->isInvulnerable())
+						{
+							// Invulnerable temporalment
+						}
+						else if(player->hasHeart())
+						{
+							player->consumeHeart();
+							player->setInvulnerable(1500);
+						}
+						else
+						{
+							handlePlayerDeath(true);
+						}
 					}
 				}
 
@@ -800,7 +813,8 @@ void Scene::render()
 	}
 
 	bool bShowExit = bExitUnlocked && !bLevelCleared && (player != NULL && !player->isDying());
-	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bShowExit, currentTime);
+	bool bHasHeart = (player != NULL && player->hasHeart());
+	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bHasHeart, bShowExit, currentTime);
 
 	// Restaurar la matriu de projecció ortogràfica de la càmera
 	texProgram.setUniformMatrix4f("projection", projection);
