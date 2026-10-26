@@ -10,7 +10,7 @@
 #define SCREEN_HEIGHT 480
 
 // Mida de la finestra a la pantalla (escala x2)
-#define WINDOW_WIDTH 1280
+#define WINDOW_WIDTH 1440
 #define WINDOW_HEIGHT 960
 
 
