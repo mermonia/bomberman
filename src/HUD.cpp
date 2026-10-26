@@ -395,7 +395,7 @@ void HUD::renderExitPrompt(float animTime)
 	renderChar('<', bannerX + bannerW - 14.0f, bannerY + 4.0f, 8.0f, 8.0f, arrowCol);
 }
 
-void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bShowExit, float animTime)
+void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bHasHeart, bool bShowExit, float animTime)
 {
 	if(shaderProgram == NULL)
 		return;
@@ -445,6 +445,13 @@ void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBo
 	float g2X = 76.0f;
 	renderIcon(HUD_ICON_LIVES, g2X, itemY, iconSize);
 	renderString(livesBuffer, g2X + iconSize + iconTextGap, itemY, charAdvance, 8.0f, 8.0f, hudTextColor);
+
+	// Si el jugador té el power-up del cor, es mostra el cor al costat de les vides
+	if(bHasHeart)
+	{
+		float heartX = g2X + iconSize + iconTextGap + float(strlen(livesBuffer)) * charAdvance + 3.0f;
+		renderIcon(HUD_ICON_HEART, heartX, itemY, iconSize);
+	}
 
 	// Grup 3: Enemics restants ('T') + quantitat (ex: 4)
 	char enemiesBuffer[16];

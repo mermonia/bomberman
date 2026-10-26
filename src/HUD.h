@@ -24,7 +24,7 @@ public:
 	~HUD();
 
 	void init(ShaderProgram *program);
-	void render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bShowExit = false, float animTime = 0.0f);
+	void render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bHasHeart = false, bool bShowExit = false, float animTime = 0.0f);
 
 private:
 	void renderQuad(float x, float y, float width, float height, float u0, float v0, float u1, float v1);
