@@ -29,8 +29,14 @@ FetchContent_Declare(glew
 	GIT_SHALLOW TRUE
 )
 
+set(AUDIO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(audio
+	GIT_REPOSITORY https://github.com/3dgep/Audio.git
+	GIT_TAG 4cc03a1b30787d263f7c6f8d48f91b77673b02b2
+)
+
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-FetchContent_MakeAvailable(glfw glm glew)
+FetchContent_MakeAvailable(glfw glm glew audio)
 
 unset(CMAKE_POLICY_VERSION_MINIMUM)
