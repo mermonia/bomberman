@@ -26,6 +26,8 @@ add_executable(bomberman
 	src/Texture.cpp
 	src/Shader.cpp
 	src/ShaderProgram.cpp
+	src/HUD.cpp
+	src/MainMenu.cpp
 	src/AnimKeyframes.h
 	src/AssetPath.h
 	src/Bomb.h
@@ -34,7 +36,10 @@ add_executable(bomberman
 	src/EnemyParachute.h
 	src/EnemyPufferfish.h
 	src/Game.h
+	src/HUD.h
+	src/MainMenu.h
 	src/Player.h
+	src/PowerUp.h
 	src/Scene.h
 	src/Shader.h
 	src/ShaderProgram.h

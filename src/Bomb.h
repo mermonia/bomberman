@@ -17,7 +17,7 @@ enum BombState
 class Bomb
 {
 public:
-	Bomb(const glm::ivec2 &tilePos, const glm::ivec2 &tileMapPos, Texture *spritesheet, ShaderProgram *program, TileMap *tileMap)
+	Bomb(const glm::ivec2 &tilePos, const glm::ivec2 &tileMapPos, Texture *spritesheet, ShaderProgram *program, TileMap *tileMap, int flameRadius = 1)
 	{
 		state = BOMB_TICKING;
 		timer = 0;
@@ -25,6 +25,7 @@ public:
 		tileCoords = tilePos;
 		tileMapDispl = tileMapPos;
 		map = tileMap;
+		radius = flameRadius;
 
 		int tileSize = map != NULL ? map->getTileSize() : 16;
 		pos = glm::vec2(float(tileCoords.x * tileSize), float(tileCoords.y * tileSize));
@@ -46,15 +47,30 @@ public:
 		spriteBomb->changeAnimation(0);
 		spriteBomb->setPosition(glm::vec2(float(tileMapDispl.x + pos.x), float(tileMapDispl.y + pos.y)));
 
-		// Sprite de l'explosió (16x32: ona expansiva completa de la part encerclada)
-		spriteExplosion = Sprite::createSprite(glm::vec2(16, 32), glm::vec2(stepX, 2.f * stepY), spritesheet, program);
-		spriteExplosion->setNumberAnimations(1);
-		spriteExplosion->setAnimationSpeed(0, 6); // 6 fps (~500ms d'animació per als 3 fotogrames)
-		// Fila 0: Columnes 3 (la part encerclada), 4 i 5
-		spriteExplosion->addKeyframe(0, glm::vec2(3.f * stepX, 0.f * stepY));
-		spriteExplosion->addKeyframe(0, glm::vec2(4.f * stepX, 0.f * stepY));
-		spriteExplosion->addKeyframe(0, glm::vec2(5.f * stepX, 0.f * stepY));
-		spriteExplosion->changeAnimation(0);
+		// Sprites de l'explosió de 16x16 (Centre, Cos continu i Punta arrodonida)
+		spriteExplosionCenter = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(stepX, stepY), spritesheet, program);
+		spriteExplosionCenter->setNumberAnimations(1);
+		spriteExplosionCenter->setAnimationSpeed(0, 6);
+		spriteExplosionCenter->addKeyframe(0, glm::vec2(3.f * stepX, 1.f * stepY));
+		spriteExplosionCenter->addKeyframe(0, glm::vec2(4.f * stepX, 1.f * stepY));
+		spriteExplosionCenter->addKeyframe(0, glm::vec2(5.f * stepX, 1.f * stepY));
+		spriteExplosionCenter->changeAnimation(0);
+
+		spriteExplosionBody = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(stepX, stepY), spritesheet, program);
+		spriteExplosionBody->setNumberAnimations(1);
+		spriteExplosionBody->setAnimationSpeed(0, 6);
+		spriteExplosionBody->addKeyframe(0, glm::vec2(1.f * stepX, 1.f * stepY));
+		spriteExplosionBody->addKeyframe(0, glm::vec2(0.f * stepX, 1.f * stepY));
+		spriteExplosionBody->addKeyframe(0, glm::vec2(0.f * stepX, 2.f * stepY));
+		spriteExplosionBody->changeAnimation(0);
+
+		spriteExplosionTip = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(stepX, stepY), spritesheet, program);
+		spriteExplosionTip->setNumberAnimations(1);
+		spriteExplosionTip->setAnimationSpeed(0, 6);
+		spriteExplosionTip->addKeyframe(0, glm::vec2(3.f * stepX, 0.f * stepY));
+		spriteExplosionTip->addKeyframe(0, glm::vec2(4.f * stepX, 0.f * stepY));
+		spriteExplosionTip->addKeyframe(0, glm::vec2(5.f * stepX, 0.f * stepY));
+		spriteExplosionTip->changeAnimation(0);
 
 		bExplodeCenter = true;
 		bExplodeLeft = false;
@@ -67,8 +83,12 @@ public:
 	{
 		if(spriteBomb != NULL)
 			delete spriteBomb;
-		if(spriteExplosion != NULL)
-			delete spriteExplosion;
+		if(spriteExplosionCenter != NULL)
+			delete spriteExplosionCenter;
+		if(spriteExplosionBody != NULL)
+			delete spriteExplosionBody;
+		if(spriteExplosionTip != NULL)
+			delete spriteExplosionTip;
 	}
 
 	void update(int deltaTime)
@@ -82,7 +102,12 @@ public:
 			{
 				state = BOMB_EXPLODING;
 				timer = 0;
-				spriteExplosion->changeAnimation(0);
+				if(spriteExplosionCenter != NULL)
+					spriteExplosionCenter->changeAnimation(0);
+				if(spriteExplosionBody != NULL)
+					spriteExplosionBody->changeAnimation(0);
+				if(spriteExplosionTip != NULL)
+					spriteExplosionTip->changeAnimation(0);
 
 				// Comprovar quins braços de la creu poden estendre's
 				bExplodeCenter = true;
@@ -106,7 +131,12 @@ public:
 		}
 		else if(state == BOMB_EXPLODING)
 		{
-			spriteExplosion->update(deltaTime);
+			if(spriteExplosionCenter != NULL)
+				spriteExplosionCenter->update(deltaTime);
+			if(spriteExplosionBody != NULL)
+				spriteExplosionBody->update(deltaTime);
+			if(spriteExplosionTip != NULL)
+				spriteExplosionTip->update(deltaTime);
 			timer += deltaTime;
 			// L'explosió dura 500 ms
 			if(timer >= 500)
@@ -127,41 +157,152 @@ public:
 			float bx = float(tileMapDispl.x + pos.x);
 			float by = float(tileMapDispl.y + pos.y);
 
-			// Dalt (0 graus: ona expansiva cap amunt)
+			// 1. Calcular l'abast de cada braç considerant els límits i els obstacles
+			int maxR_Up = 0;
 			if(bExplodeUp)
 			{
-				spriteExplosion->setPosition(glm::vec2(bx + 2.f, by - 16.f));
-				spriteExplosion->setAngle(0.f);
-				spriteExplosion->render();
-			}
-			// Baix (180 graus: ona expansiva cap avall, compensant l'eix per centrar-la amb la de dalt)
-			if(bExplodeDown)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx - 2.f, by));
-				spriteExplosion->setAngle(180.f);
-				spriteExplosion->render();
-			}
-			// Dreta (90 graus: ona expansiva cap a la dreta, compensada verticalment)
-			if(bExplodeRight)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx + 8.f, by - 6.f));
-				spriteExplosion->setAngle(90.f);
-				spriteExplosion->render();
-			}
-			// Esquerra (270 graus: ona expansiva cap a l'esquerra, compensada verticalment)
-			if(bExplodeLeft)
-			{
-				spriteExplosion->setPosition(glm::vec2(bx - 8.f, by - 9.f));
-				spriteExplosion->setAngle(270.f);
-				spriteExplosion->render();
+				for(int r = 1; r <= radius; r++)
+				{
+					if(tileCoords.y - r < 0) break;
+					if(map != NULL && map->isGround(tileCoords.x, tileCoords.y - r)) break;
+					maxR_Up = r;
+					if(map != NULL && map->isBush(tileCoords.x, tileCoords.y - r)) break;
+				}
 			}
 
-			// Si està tancat en 4 parets, dibuixar l'explosió centrada
-			if(!bExplodeUp && !bExplodeDown && !bExplodeLeft && !bExplodeRight && bExplodeCenter)
+			int maxR_Down = 0;
+			if(bExplodeDown)
 			{
-				spriteExplosion->setPosition(glm::vec2(bx, by - 8.f));
-				spriteExplosion->setAngle(0.f);
-				spriteExplosion->render();
+				for(int r = 1; r <= radius; r++)
+				{
+					if(map != NULL && tileCoords.y + r >= map->getMapHeight()) break;
+					if(map != NULL && map->isGround(tileCoords.x, tileCoords.y + r)) break;
+					maxR_Down = r;
+					if(map != NULL && map->isBush(tileCoords.x, tileCoords.y + r)) break;
+				}
+			}
+
+			int maxR_Right = 0;
+			if(bExplodeRight)
+			{
+				for(int r = 1; r <= radius; r++)
+				{
+					if(map != NULL && tileCoords.x + r >= map->getMapWidth()) break;
+					if(map != NULL && map->isGround(tileCoords.x + r, tileCoords.y)) break;
+					maxR_Right = r;
+					if(map != NULL && map->isBush(tileCoords.x + r, tileCoords.y)) break;
+				}
+			}
+
+			int maxR_Left = 0;
+			if(bExplodeLeft)
+			{
+				for(int r = 1; r <= radius; r++)
+				{
+					if(tileCoords.x - r < 0) break;
+					if(map != NULL && map->isGround(tileCoords.x - r, tileCoords.y)) break;
+					maxR_Left = r;
+					if(map != NULL && map->isBush(tileCoords.x - r, tileCoords.y)) break;
+				}
+			}
+
+			// 2. Dalt (Up: 0 graus)
+			for(int r = 1; r <= maxR_Up; r++)
+			{
+				glm::vec2 tilePos(bx, by - float(r * 16));
+				if(r < maxR_Up && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(tilePos);
+					spriteExplosionBody->setAngle(0.f);
+					spriteExplosionBody->render();
+				}
+				else if(r == maxR_Up && spriteExplosionTip != NULL)
+				{
+					spriteExplosionTip->setPosition(tilePos);
+					spriteExplosionTip->setAngle(0.f);
+					spriteExplosionTip->render();
+				}
+			}
+
+			// 3. Baix (Down: 180 graus)
+			for(int r = 1; r <= maxR_Down; r++)
+			{
+				glm::vec2 tilePos(bx, by + float(r * 16));
+				if(r < maxR_Down && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(tilePos);
+					spriteExplosionBody->setAngle(0.f);
+					spriteExplosionBody->render();
+				}
+				else if(r == maxR_Down && spriteExplosionTip != NULL)
+				{
+					spriteExplosionTip->setPosition(tilePos);
+					spriteExplosionTip->setAngle(180.f);
+					spriteExplosionTip->render();
+				}
+			}
+
+			// 4. Dreta (Right: 90 graus)
+			for(int r = 1; r <= maxR_Right; r++)
+			{
+				glm::vec2 tilePos(bx + float(r * 16), by);
+				if(r < maxR_Right && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(tilePos);
+					spriteExplosionBody->setAngle(90.f);
+					spriteExplosionBody->render();
+				}
+				else if(r == maxR_Right && spriteExplosionTip != NULL)
+				{
+					spriteExplosionTip->setPosition(tilePos);
+					spriteExplosionTip->setAngle(90.f);
+					spriteExplosionTip->render();
+				}
+			}
+
+			// 5. Esquerra (Left: 270 graus)
+			for(int r = 1; r <= maxR_Left; r++)
+			{
+				glm::vec2 tilePos(bx - float(r * 16), by);
+				if(r < maxR_Left && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(tilePos);
+					spriteExplosionBody->setAngle(90.f);
+					spriteExplosionBody->render();
+				}
+				else if(r == maxR_Left && spriteExplosionTip != NULL)
+				{
+					spriteExplosionTip->setPosition(tilePos);
+					spriteExplosionTip->setAngle(270.f);
+					spriteExplosionTip->render();
+				}
+			}
+
+			// 6. Centre de l'explosió: connecta els eixos i mostra l'esclat central
+			if(bExplodeCenter)
+			{
+				glm::vec2 centerPos(bx, by);
+				bool bHorizontal = (maxR_Left > 0 || maxR_Right > 0);
+				bool bVertical = (maxR_Up > 0 || maxR_Down > 0);
+
+				if((bHorizontal || !bVertical) && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(centerPos);
+					spriteExplosionBody->setAngle(90.f);
+					spriteExplosionBody->render();
+				}
+				if((bVertical || !bHorizontal) && spriteExplosionBody != NULL)
+				{
+					spriteExplosionBody->setPosition(centerPos);
+					spriteExplosionBody->setAngle(0.f);
+					spriteExplosionBody->render();
+				}
+				if(spriteExplosionCenter != NULL)
+				{
+					spriteExplosionCenter->setPosition(centerPos);
+					spriteExplosionCenter->setAngle(0.f);
+					spriteExplosionCenter->render();
+				}
 			}
 		}
 	}
@@ -182,14 +323,51 @@ public:
 
 		if(bExplodeCenter)
 			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y)));
-		if(bExplodeLeft)
-			tiles.push_back(glm::ivec2(int(pos.x - 16), int(pos.y)));
-		if(bExplodeRight)
-			tiles.push_back(glm::ivec2(int(pos.x + 16), int(pos.y)));
+
+		// Dalt
 		if(bExplodeUp)
-			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y - 16)));
+		{
+			for(int r = 1; r <= radius; r++)
+			{
+				if(tileCoords.y - r < 0) break;
+				if(map != NULL && map->isGround(tileCoords.x, tileCoords.y - r)) break;
+				tiles.push_back(glm::ivec2(int(pos.x), int(pos.y - r * 16)));
+				if(map != NULL && map->isBush(tileCoords.x, tileCoords.y - r)) break;
+			}
+		}
+		// Baix
 		if(bExplodeDown)
-			tiles.push_back(glm::ivec2(int(pos.x), int(pos.y + 16)));
+		{
+			for(int r = 1; r <= radius; r++)
+			{
+				if(map != NULL && tileCoords.y + r >= map->getMapHeight()) break;
+				if(map != NULL && map->isGround(tileCoords.x, tileCoords.y + r)) break;
+				tiles.push_back(glm::ivec2(int(pos.x), int(pos.y + r * 16)));
+				if(map != NULL && map->isBush(tileCoords.x, tileCoords.y + r)) break;
+			}
+		}
+		// Dreta
+		if(bExplodeRight)
+		{
+			for(int r = 1; r <= radius; r++)
+			{
+				if(map != NULL && tileCoords.x + r >= map->getMapWidth()) break;
+				if(map != NULL && map->isGround(tileCoords.x + r, tileCoords.y)) break;
+				tiles.push_back(glm::ivec2(int(pos.x + r * 16), int(pos.y)));
+				if(map != NULL && map->isBush(tileCoords.x + r, tileCoords.y)) break;
+			}
+		}
+		// Esquerra
+		if(bExplodeLeft)
+		{
+			for(int r = 1; r <= radius; r++)
+			{
+				if(tileCoords.x - r < 0) break;
+				if(map != NULL && map->isGround(tileCoords.x - r, tileCoords.y)) break;
+				tiles.push_back(glm::ivec2(int(pos.x - r * 16), int(pos.y)));
+				if(map != NULL && map->isBush(tileCoords.x - r, tileCoords.y)) break;
+			}
+		}
 
 		return tiles;
 	}
@@ -197,6 +375,7 @@ public:
 private:
 	BombState state;
 	int timer;
+	int radius;
 	bool bSolid;
 	glm::ivec2 tileCoords;
 	glm::ivec2 tileMapDispl;
@@ -204,7 +383,9 @@ private:
 	TileMap *map;
 
 	Sprite *spriteBomb;
-	Sprite *spriteExplosion;
+	Sprite *spriteExplosionCenter;
+	Sprite *spriteExplosionBody;
+	Sprite *spriteExplosionTip;
 
 	bool bExplodeCenter;
 	bool bExplodeLeft;

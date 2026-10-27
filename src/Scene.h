@@ -13,6 +13,8 @@
 #include "EnemyParachute.h"
 #include "EnemyPufferfish.h"
 #include "Bomb.h"
+#include "PowerUp.h"
+#include "HUD.h"
 
 using std::vector;
 
@@ -36,12 +38,21 @@ public:
 	void update(int deltaTime);
 	void render();
 
+	void loadLevel(int levelNumber);
+	void nextLevel();
+	int getCurrentLevel() const { return currentLevel; }
+	bool isGameOver() const { return bGameOver; }
+	void resetGameOver() { bGameOver = false; bWaitingGameOver = false; bWaitingRestartLevel = false; }
+
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
 	void addEnemyParachute(int tileX, int tileY);
 	void addEnemyPufferfish(int tileX, int tileY);
 	void addEnemyOfType(const std::string &type, int tileX, int tileY);
 	void dropBomb();
+
+	void spawnPowerUp(int tileX, int tileY);
+	void applyPowerUp(PowerUpType type);
 
 private:
 	void initShaders();
@@ -50,14 +61,32 @@ private:
 	void checkBombCollisions();
 	void updateBombSolids();
 	bool isTileOccupiedByEntity(const glm::ivec2 &tilePixelPos) const;
+	void handlePlayerDeath(bool byBomb = false);
 
 private:
 	TileMap *map;
 	Player *player;
 	vector<Enemy *> enemies;
 	vector<Bomb *> bombs;
+	vector<PowerUp *> powerUps;
 	Texture spritesheetBomb;
+	Texture spritesheetPowerUps;
 	bool bBombKeyPressed;
+	bool bKKeyPressed;
+	bool bNumKeyPressed;
+	bool bLevelCleared;
+	int levelClearTimer;
+	bool bExitUnlocked;
+	bool bGameOver;
+	bool bWaitingGameOver;
+	bool bWaitingRestartLevel;
+	int currentLevel;
+	int maxSimultaneousBombs;
+	int bombFlameRadius;
+	int levelTimeRemaining;
+	int levelTimerMs;
+	int playerLives;
+	HUD hud;
 	ShaderProgram texProgram;
 	float currentTime;
 	glm::mat4 projection;

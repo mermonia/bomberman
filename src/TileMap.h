@@ -45,7 +45,12 @@ public:
 
 	bool hasPlayerSpawn() const { return playerSpawn.x >= 0 && playerSpawn.y >= 0; }
 	glm::ivec2 getPlayerSpawn() const { return playerSpawn; }
+	bool hasDoor() const { return doorTile.x >= 0 && doorTile.y >= 0; }
+	glm::ivec2 getDoorTile() const { return doorTile; }
 	const std::vector<EnemySpawn> &getEnemySpawns() const { return enemySpawns; }
+
+	bool isBush(int tileX, int tileY) const;
+	bool destroyBush(int tileX, int tileY);
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
@@ -85,6 +90,9 @@ private:
 	bool zeroBased;
 	int airTile;
 	glm::ivec2 playerSpawn;
+	glm::ivec2 doorTile;
+	int doorTileId;
+	std::vector<int> bushTiles;
 	std::vector<EnemySpawn> enemySpawns;
 	glm::vec2 renderMinCoords;
 	ShaderProgram *renderProgram;
