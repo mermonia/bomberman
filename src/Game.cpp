@@ -48,8 +48,13 @@ bool Game::update(int deltaTime)
 		}
 		else if(scene.isGameWon())
 		{
-			bSceneInited = false;
-			state = STATE_MENU;
+			bPendingResetScene = true;
+			changeState(STATE_MENU);
+		}
+		else if(scene.hasPendingLevel())
+		{
+			bPendingLevel = true;
+			changeState(STATE_PLAY);
 		}
 		break;
 	case STATE_GAME_OVER:
@@ -250,6 +255,8 @@ void Game::applyTransition()
 		bSceneInited = false;
 	if(bPendingGameOver)
 		mainMenu.startGameOver();
+	if(bPendingLevel)
+		scene.applyPendingLevel();
 
 	bPendingNewGame = false;
 	bPendingResetScene = false;
