@@ -32,6 +32,10 @@ Player::Player()
 	walkRemainder = 0.f;
 	fallRemainder = 0.f;
 	bDying = false;
+	bEnteringDoor = false;
+	bHasHeart = false;
+	invulnerableTime = 0;
+	walkSpeed = WALK_SPEED;
 	dyingTime = 0;
 	maxDyingTime = 1000;
 }
@@ -94,7 +98,7 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 
 	// Cada cel·la és de 16x16 px: 16/64 = 0.25f (X), 16/32 = 0.50f (Y)
 	spriteDeath = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 0.50f), &spritesheetDeath, &shaderProgram);
-	spriteDeath->setNumberAnimations(2);
+	spriteDeath->setNumberAnimations(3);
 
 	// Animació 0: Mort per enemic (els 8 fotogrames d'abans)
 	// Fila 1 (segona fila, y = 0.50f): El personatge es gira i cau d'esquena (4 fotogrames)
@@ -110,6 +114,10 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	spriteDeath->addKeyframe(1, glm::vec2(0.50f, 0.00f)); // Fotograma 3 (esclat vermell)
 	spriteDeath->addKeyframe(1, glm::vec2(0.25f, 0.00f)); // Fotograma 4 (dispersió)
 
+	// Animació 2: Entrar a la porta (segona fila, tercera columna de player_death.png: y = 0.50f, x = 0.50f)
+	spriteDeath->setAnimationSpeed(2, 1);
+	spriteDeath->addKeyframe(2, glm::vec2(0.50f, 0.50f));
+
 	spriteDeath->changeAnimation(0);
 
 	tileMapDispl = tileMapPos;
@@ -120,6 +128,16 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 
 void Player::update(int deltaTime)
 {
+	if(bEnteringDoor)
+	{
+		if(spriteDeath != NULL)
+		{
+			spriteDeath->update(deltaTime);
+			spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+		}
+		return;
+	}
+
 	if(bDying)
 	{
 		spriteDeath->update(deltaTime);
@@ -135,6 +153,13 @@ void Player::update(int deltaTime)
 			spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 		}
 		return;
+	}
+
+	if(invulnerableTime > 0)
+	{
+		invulnerableTime -= deltaTime;
+		if(invulnerableTime < 0)
+			invulnerableTime = 0;
 	}
 
 	sprite->update(deltaTime);
@@ -304,10 +329,16 @@ void Player::update(int deltaTime)
 
 void Player::render()
 {
-	if(bDying)
-		spriteDeath->render();
+	if(bDying || bEnteringDoor)
+	{
+		if(spriteDeath != NULL)
+			spriteDeath->render();
+	}
 	else
-		sprite->render();
+	{
+		if(invulnerableTime <= 0 || (invulnerableTime / 100) % 2 == 0)
+			sprite->render();
+	}
 }
 
 void Player::setTileMap(TileMap *tileMap)
@@ -317,20 +348,43 @@ void Player::setTileMap(TileMap *tileMap)
 
 void Player::setPosition(const glm::vec2 &pos)
 {
+	bEnteringDoor = false;
+	bDying = false;
+	dyingTime = 0;
+	bJumping = false;
 	posPlayer = pos;
 	spawnPos = pos;
-	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+	if(sprite != NULL)
+	{
+		sprite->changeAnimation(STAND_RIGHT);
+		sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+	}
 	if(spriteDeath != NULL)
 		spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+}
+
+void Player::enterDoor()
+{
+	bEnteringDoor = true;
+	bJumping = false;
+	if(spriteDeath != NULL)
+	{
+		spriteDeath->changeAnimation(2);
+		spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+	}
 }
 
 void Player::die(bool byBomb)
 {
 	if(bDying)
 		return;
+	bEnteringDoor = false;
 	bDying = true;
 	dyingTime = 0;
 	bJumping = false;
+	bHasHeart = false;
+	invulnerableTime = 0;
+	walkSpeed = WALK_SPEED;
 	if(byBomb)
 	{
 		maxDyingTime = 600;
@@ -346,7 +400,7 @@ void Player::die(bool byBomb)
 
 int Player::walkStep(int deltaTime)
 {
-	walkRemainder += WALK_SPEED * TILE_SIZE * deltaTime / 1000.f;
+	walkRemainder += walkSpeed * TILE_SIZE * deltaTime / 1000.f;
 	int step = int(walkRemainder);
 	walkRemainder -= float(step);
 

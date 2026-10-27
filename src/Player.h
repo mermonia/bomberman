@@ -27,6 +27,15 @@ public:
 	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
 	void die(bool byBomb = false);
 	bool isDying() const { return bDying; }
+	void enterDoor();
+	bool isEnteringDoor() const { return bEnteringDoor; }
+	bool hasHeart() const { return bHasHeart; }
+	void giveHeart() { bHasHeart = true; }
+	void consumeHeart() { bHasHeart = false; }
+	bool isInvulnerable() const { return invulnerableTime > 0; }
+	void setInvulnerable(int durationMs = 1500) { invulnerableTime = durationMs; }
+	void increaseSpeed(float delta = 0.6f) { walkSpeed += delta; }
+	float getSpeed() const { return walkSpeed; }
 	
 private:
 	bool collisionDown(int *posY);
@@ -36,6 +45,10 @@ private:
 private:
 	bool bJumping;
 	bool bDying;
+	bool bEnteringDoor;
+	bool bHasHeart;
+	int invulnerableTime;
+	float walkSpeed;
 	int dyingTime, maxDyingTime;
 	glm::ivec2 tileMapDispl, posPlayer, spawnPos;
 	float jumpAngle, walkRemainder, fallRemainder;
