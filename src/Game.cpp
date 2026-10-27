@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Game.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 
 void Game::init()
@@ -21,10 +22,14 @@ void Game::init()
 	// scene.init() is deferred until the player presses JUGAR
 
 	initFade();
+
+	AudioManager::instance().init();
 }
 
 bool Game::update(int deltaTime)
 {
+	AudioManager::instance().update();
+
 	if(fadePhase != FADE_NONE)
 	{
 		updateFade(deltaTime);

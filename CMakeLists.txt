@@ -15,6 +15,7 @@ include(cmake/dependencies.cmake)
 add_executable(bomberman
 	src/main.cpp
 	src/AssetPath.cpp
+	src/AudioManager.cpp
 	src/Game.cpp
 	src/Scene.cpp
 	src/TileMap.cpp
@@ -30,6 +31,7 @@ add_executable(bomberman
 	src/MainMenu.cpp
 	src/AnimKeyframes.h
 	src/AssetPath.h
+	src/AudioManager.h
 	src/Bomb.h
 	src/Enemy.h
 	src/EnemyChaser.h
@@ -55,6 +57,7 @@ target_link_libraries(bomberman PRIVATE
 	glm::glm
 	libglew_static
 	OpenGL::GL
+	Audio::Audio
 )
 
 if(MSVC)
