@@ -36,6 +36,7 @@ public:
 	void setInvulnerable(int durationMs = 1500) { invulnerableTime = durationMs; }
 	void increaseSpeed(float delta = 0.6f) { walkSpeed += delta; }
 	float getSpeed() const { return walkSpeed; }
+	void setGodTint(bool bTint) { bGodTint = bTint; }
 	
 private:
 	bool collisionDown(int *posY);
@@ -47,6 +48,7 @@ private:
 	bool bDying;
 	bool bEnteringDoor;
 	bool bHasHeart;
+	bool bGodTint;
 	int invulnerableTime;
 	float walkSpeed;
 	int dyingTime, maxDyingTime;

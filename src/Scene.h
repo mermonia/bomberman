@@ -63,6 +63,7 @@ private:
 	void updateBombSolids();
 	bool isTileOccupiedByEntity(const glm::ivec2 &tilePixelPos) const;
 	void handlePlayerDeath(bool byBomb = false);
+	void toggleGodMode();
 
 private:
 	TileMap *map;
@@ -78,10 +79,12 @@ private:
 	bool bDoorOpen;
 	bool bBombKeyPressed;
 	bool bKKeyPressed;
+	bool bGKeyPressed;
 	bool bNumKeyPressed;
 	bool bLevelCleared;
 	int levelClearTimer;
 	bool bExitUnlocked;
+	bool bGodMode;
 	bool bGameOver;
 	bool bWaitingGameOver;
 	bool bWaitingRestartLevel;

@@ -34,6 +34,7 @@ Player::Player()
 	bDying = false;
 	bEnteringDoor = false;
 	bHasHeart = false;
+	bGodTint = false;
 	invulnerableTime = 0;
 	walkSpeed = WALK_SPEED;
 	dyingTime = 0;
