@@ -22,6 +22,9 @@
 #define INIT_ENEMY_CHASER_X_TILES 4
 #define INIT_ENEMY_CHASER_Y_TILES 11
 
+#define GOD_MODE_OFF_GRACE_MS 1500
+#define GOD_MODE_OFF_REFILL_SECONDS 30
+
 
 Scene::Scene()
 {
@@ -33,7 +36,9 @@ Scene::Scene()
 	powerUps.clear();
 	bBombKeyPressed = false;
 	bKKeyPressed = false;
+	bGKeyPressed = false;
 	bNumKeyPressed = false;
+	bGodMode = false;
 	bLevelCleared = false;
 	levelClearTimer = 0;
 	bExitUnlocked = false;
@@ -94,7 +99,9 @@ void Scene::init()
 	srand((unsigned int)time(NULL));
 	bBombKeyPressed = false;
 	bKKeyPressed = false;
+	bGKeyPressed = false;
 	bNumKeyPressed = false;
+	bGodMode = false;
 	bGameOver = false;
 	bWaitingGameOver = false;
 	bWaitingRestartLevel = false;
@@ -194,6 +201,7 @@ void Scene::loadLevel(int levelNumber)
 	player->setPosition(glm::vec2(playerTile.x * map->getTileSize(), playerTile.y * map->getTileSize()));
 	player->setTileMap(map);
 	player->setInvulnerable(1500);
+	player->setGodTint(bGodMode);
 
 	bLevelCleared = false;
 	levelClearTimer = 0;
@@ -369,6 +377,19 @@ void Scene::update(int deltaTime)
 		bKKeyPressed = false;
 	}
 
+	if(Game::instance().getKey(GLFW_KEY_G))
+	{
+		if(!bGKeyPressed && player != NULL && !player->isDying())
+		{
+			bGKeyPressed = true;
+			toggleGodMode();
+		}
+	}
+	else
+	{
+		bGKeyPressed = false;
+	}
+
 
 	// Plantar bomba en prémer la lletra 'a'
 	if(Game::instance().getKey(GLFW_KEY_A))
@@ -397,7 +418,7 @@ void Scene::update(int deltaTime)
 			if(levelTimeRemaining > 0)
 			{
 				levelTimeRemaining--;
-				if(levelTimeRemaining == 0 && player != NULL && !player->isDying())
+				if(levelTimeRemaining == 0 && !bGodMode && player != NULL && !player->isDying())
 				{
 					handlePlayerDeath(false);
 				}
@@ -562,9 +583,24 @@ void Scene::handlePlayerDeath(bool byBomb)
 	}
 }
 
+void Scene::toggleGodMode()
+{
+	bGodMode = !bGodMode;
+	player->setGodTint(bGodMode);
+	if(bGodMode)
+		return;
+
+	player->setInvulnerable(GOD_MODE_OFF_GRACE_MS);
+	if(levelTimeRemaining == 0)
+	{
+		levelTimeRemaining = GOD_MODE_OFF_REFILL_SECONDS;
+		levelTimerMs = 0;
+	}
+}
+
 void Scene::checkCollisions()
 {
-	if(player == NULL || player->isDying() || player->isInvulnerable())
+	if(player == NULL || player->isDying() || player->isInvulnerable() || bGodMode)
 		return;
 
 	glm::vec2 pPos = player->getPosition();
@@ -694,7 +730,7 @@ void Scene::checkBombCollisions()
 					if((pPos.x < tPos.x + tSize.x) && (pPos.x + pSize.x > tPos.x) &&
 					   (pPos.y < tPos.y + tSize.y) && (pPos.y + pSize.y > tPos.y))
 					{
-						if(player->isInvulnerable())
+						if(player->isInvulnerable() || bGodMode)
 						{
 							// Invulnerable temporalment
 						}
