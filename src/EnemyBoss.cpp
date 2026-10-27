@@ -16,7 +16,7 @@
 #define BOSS_HEIGHT_PERIOD_MS 8000
 #define BOSS_BOB_PX 4
 #define BOSS_BOB_PERIOD_MS 1600.f
-#define BOSS_HIGH_ROW_OFFSET -1
+#define BOSS_HIGH_ROW_OFFSET 0
 #define BOSS_LOW_ROW_OFFSET 5
 #define BOSS_BULLET_MS_PER_PX 16
 #define BOSS_BULLET_LIFE_MS 3000
@@ -31,7 +31,7 @@ enum EnemyBossAnims
 	ENEMY_BOSS_DRIFT, ENEMY_BOSS_CAST
 };
 
-static const int TELEPORT_OFFSETS[BOSS_TELEPORT_POINTS][2] = { { -5, -1 }, { 0, -1 }, { 5, -1 }, { -3, 2 }, { 3, 2 } };
+static const int TELEPORT_OFFSETS[BOSS_TELEPORT_POINTS][2] = { { -5, 0 }, { 0, 0 }, { 5, 0 }, { -3, 2 }, { 3, 2 } };
 static const int BLAST_OFFSETS[BOSS_DEATH_BLASTS][2] = { { -4, -4 }, { 20, -2 }, { 8, 10 }, { -6, 18 }, { 22, 20 }, { 8, -8 } };
 static const int BULLET_DIRS[4][2] = { { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } };
 
@@ -445,10 +445,12 @@ int EnemyBoss::targetHeight() const
 	int half = BOSS_HEIGHT_PERIOD_MS / 2;
 	int phase = heightTimer % BOSS_HEIGHT_PERIOD_MS;
 	float t = phase < half ? float(phase) / float(half) : float(BOSS_HEIGHT_PERIOD_MS - phase) / float(half);
-	float dip = t * t * t;
+	float dip = t * t;
 	float bob = float(BOSS_BOB_PX) * sinf(2.f * 3.14159265f * float(heightTimer) / BOSS_BOB_PERIOD_MS);
 
 	int target = highest + int(float(lowest - highest) * dip + bob);
+	if(target < highest)
+		target = highest;
 	if(target > lowest)
 		target = lowest;
 	return target;
