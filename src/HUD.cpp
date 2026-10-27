@@ -403,7 +403,8 @@ void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBo
 	// Establir projecció ortogràfica estàtica de pantalla completa (240x160)
 	glm::mat4 hudProj = glm::ortho(0.0f, 240.0f, 160.0f, 0.0f);
 	shaderProgram->setUniformMatrix4f("projection", hudProj);
-	shaderProgram->setUniformMatrix4f("modelview", glm::mat4(1.0f));
+	glm::mat4 hudModelview = glm::mat4(1.0f);
+	shaderProgram->setUniformMatrix4f("modelview", hudModelview);
 	shaderProgram->setUniform2f("texCoordDispl", 0.0f, 0.0f);
 
 	glEnable(GL_TEXTURE_2D);
