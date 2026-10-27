@@ -82,7 +82,7 @@ void Scene::init()
 	initShaders();
 
 	// Carregar textura de la bomba (bomba2.png)
-	spritesheetBomb.loadFromFile(assetPath("images/bomba2.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setMinFilter(GL_NEAREST);
