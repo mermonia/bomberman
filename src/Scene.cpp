@@ -888,7 +888,7 @@ void Scene::render()
 
 	bool bShowExit = bExitUnlocked && !bLevelCleared && (player != NULL && !player->isDying());
 	bool bHasHeart = (player != NULL && player->hasHeart());
-	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bHasHeart, bShowExit, currentTime);
+	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bHasHeart, bShowExit, currentTime, bGodMode);
 
 	// Restaurar la matriu de projecció ortogràfica de la càmera
 	texProgram.setUniformMatrix4f("projection", projection);

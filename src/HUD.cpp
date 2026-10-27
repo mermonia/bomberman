@@ -395,7 +395,7 @@ void HUD::renderExitPrompt(float animTime)
 	renderChar('<', bannerX + bannerW - 14.0f, bannerY + 4.0f, 8.0f, 8.0f, arrowCol);
 }
 
-void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bHasHeart, bool bShowExit, float animTime)
+void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBombs, int flameRadius, bool bHasHeart, bool bShowExit, float animTime, bool bGodMode)
 {
 	if(shaderProgram == NULL)
 		return;
@@ -439,6 +439,12 @@ void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBo
 	float g1X = 16.0f;
 	renderIcon(HUD_ICON_CLOCK, g1X, itemY, iconSize);
 	renderString(timeBuffer, g1X + iconSize + iconTextGap, itemY, charAdvance, 8.0f, 8.0f, hudTextColor);
+
+	if(bGodMode)
+	{
+		float godX = g1X + iconSize + iconTextGap + float(strlen(timeBuffer)) * charAdvance + 4.0f;
+		renderString("GOD", godX, itemY, charAdvance, 8.0f, 8.0f, hudTextColor);
+	}
 
 	// Grup 2: Vides (cap de bomberman en marc) + quantitat (ex: 2)
 	char livesBuffer[16];

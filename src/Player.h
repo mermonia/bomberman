@@ -60,6 +60,7 @@ private:
 	Sprite *sprite;
 	Sprite *spriteDeath;
 	TileMap *map;
+	ShaderProgram *program;
 
 };
 
