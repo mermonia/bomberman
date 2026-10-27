@@ -6,6 +6,7 @@
 #include "Sprite.h"
 #include "TileMap.h"
 #include "ShaderProgram.h"
+#include "AudioManager.h"
 
 enum BombState
 {
@@ -102,6 +103,7 @@ public:
 			{
 				state = BOMB_EXPLODING;
 				timer = 0;
+				AudioManager::instance().playSound(SFX_EXPLOSION);
 				if(spriteExplosionCenter != NULL)
 					spriteExplosionCenter->changeAnimation(0);
 				if(spriteExplosionBody != NULL)

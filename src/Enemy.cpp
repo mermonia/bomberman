@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include "Enemy.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 #define TILE_SIZE 16
 #define FALL_STEP 4
@@ -180,6 +181,7 @@ void Enemy::die()
 	if(bDying)
 		return;
 	bDying = true;
+	AudioManager::instance().playSound(SFX_ENEMY_DIE);
 	bDead = false;
 	dyingTime = 0;
 	sprite->changeAnimation(DIE);

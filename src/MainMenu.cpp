@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "MainMenu.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 // ─── Built-in 8×8 bitmap font ────────────────────────────────────────────────
 // Covers ASCII 32 (' ') through 90 ('Z') → 59 glyphs.
@@ -484,15 +485,18 @@ MenuAction MainMenu::handleKey(int key)
 	if(key == GLFW_KEY_UP || key == GLFW_KEY_W)
 	{
 		selectedOption = (selectedOption + 3) % 4;
+		AudioManager::instance().playSound(SFX_MENU_MOVE);
 		return MENU_NONE;
 	}
 	if(key == GLFW_KEY_DOWN || key == GLFW_KEY_S)
 	{
 		selectedOption = (selectedOption + 1) % 4;
+		AudioManager::instance().playSound(SFX_MENU_MOVE);
 		return MENU_NONE;
 	}
 	if(key == GLFW_KEY_ENTER || key == GLFW_KEY_SPACE)
 	{
+		AudioManager::instance().playSound(SFX_MENU_SELECT);
 		switch(selectedOption)
 		{
 		case 0: return MENU_PLAY;

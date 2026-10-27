@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include "Player.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 #include "Game.h"
 
 
@@ -312,6 +313,7 @@ void Player::update(int deltaTime)
 				bJumping = true;
 				jumpAngle = 0.f;
 				startY = posPlayer.y;
+				AudioManager::instance().playSound(SFX_JUMP);
 				if(sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT || sprite->animation() == FALL_LEFT)
 					sprite->changeAnimation(JUMP_LEFT);
 				else if(sprite->animation() == MOVE_RIGHT || sprite->animation() == STAND_RIGHT || sprite->animation() == FALL_RIGHT)

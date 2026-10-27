@@ -24,6 +24,7 @@ void Game::init()
 	initFade();
 
 	AudioManager::instance().init();
+	AudioManager::instance().playMusic(MUSIC_TITLE);
 }
 
 bool Game::update(int deltaTime)
@@ -269,7 +270,16 @@ void Game::applyTransition()
 	bPendingLevel = false;
 
 	mainMenu.setGameInProgress(bSceneInited);
+	if(state == STATE_GAME_OVER && pendingState != STATE_GAME_OVER)
+		AudioManager::instance().stopMusic();
 	state = pendingState;
+
+	if(state == STATE_PLAY)
+		AudioManager::instance().playMusic(AudioManager::musicForLevel(scene.getCurrentLevel()));
+	else if(state == STATE_GAME_OVER)
+		AudioManager::instance().playMusic(JINGLE_GAME_OVER);
+	else
+		AudioManager::instance().playMusic(MUSIC_TITLE);
 }
 
 void Game::renderFade()
