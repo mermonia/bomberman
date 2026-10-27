@@ -645,7 +645,7 @@ void Scene::checkCollisions()
 		bool collisionX = (pPos.x < ePos.x + eSize.x) && (pPos.x + pSize.x > ePos.x);
 		bool collisionY = (pPos.y < ePos.y + eSize.y) && (pPos.y + pSize.y > ePos.y);
 
-		if(collisionX && collisionY)
+		if((collisionX && collisionY) || enemies[i]->hitsPlayer(pPos, pSize))
 		{
 			// Si el personatge té l'escut del cor, el consumeix i sobreviu (sense matar l'enemic)
 			if(player->hasHeart())
@@ -784,7 +784,7 @@ void Scene::checkBombCollisions()
 					if((ePos.x < tPos.x + tSize.x) && (ePos.x + eSize.x > tPos.x) &&
 					   (ePos.y < tPos.y + tSize.y) && (ePos.y + eSize.y > tPos.y))
 					{
-						enemies[e]->die();
+						enemies[e]->hit();
 					}
 				}
 			}

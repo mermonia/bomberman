@@ -29,8 +29,10 @@ public:
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
 	glm::ivec2 getPosition() const { return posEnemy; }
-	glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
+	virtual glm::ivec2 getSize() const { return glm::ivec2(16, 16); }
 	virtual void die();
+	virtual void hit();
+	virtual bool hitsPlayer(const glm::vec2 &playerPos, const glm::vec2 &playerSize) const;
 	bool isDying() const { return bDying; }
 	bool isDead() const { return bDead; }
 
