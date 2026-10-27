@@ -755,7 +755,7 @@ void MainMenu::drawInstructionsScreen()
 	renderString("TECLES DE CORRECCIO:", 16, y, 1.0f, 6.5f, cyan); y += 11;
 	renderString("G: MODE DEU (INVULNERABLE)", 16, y, 0.85f, 5.2f, yellow); y += 9;
 	renderString("K: ELIMINAR TOTS ENEMICS",  16, y, 0.85f, 5.2f, yellow); y += 9;
-	renderString("1-4: SALTAR DE NIVELL",     16, y, 0.85f, 5.2f, yellow);
+	renderString("1-5: SALTAR DE NIVELL",     16, y, 0.85f, 5.2f, yellow);
 
 	float blink = 0.5f + 0.5f * std::sin(float(animTimer) * 0.006f);
 	renderStringCentered("PREM ESC O ENTER PER TORNAR", 120, 147,

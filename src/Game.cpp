@@ -35,6 +35,11 @@ bool Game::update(int deltaTime)
 			mainMenu.startGameOver();
 			state = STATE_GAME_OVER;
 		}
+		else if(scene.isGameWon())
+		{
+			bSceneInited = false;
+			state = STATE_MENU;
+		}
 		break;
 	case STATE_GAME_OVER:
 		mainMenu.update(deltaTime);

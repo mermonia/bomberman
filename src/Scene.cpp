@@ -43,6 +43,7 @@ Scene::Scene()
 	levelClearTimer = 0;
 	bExitUnlocked = false;
 	bGameOver = false;
+	bGameWon = false;
 	bWaitingGameOver = false;
 	bWaitingRestartLevel = false;
 	currentLevel = 1;
@@ -103,6 +104,7 @@ void Scene::init()
 	bNumKeyPressed = false;
 	bGodMode = false;
 	bGameOver = false;
+	bGameWon = false;
 	bWaitingGameOver = false;
 	bWaitingRestartLevel = false;
 	bExitUnlocked = false;
@@ -149,7 +151,7 @@ void Scene::loadLevel(int levelNumber)
 {
 	currentLevel = levelNumber;
 	if(currentLevel < 1) currentLevel = 1;
-	if(currentLevel > 4) currentLevel = 4;
+	if(currentLevel > 5) currentLevel = 5;
 
 	bGameOver = false;
 	bWaitingGameOver = false;
@@ -235,10 +237,12 @@ void Scene::loadLevel(int levelNumber)
 
 void Scene::nextLevel()
 {
-	int next = currentLevel + 1;
-	if(next > 4)
-		next = 1;
-	loadLevel(next);
+	if(currentLevel >= 5)
+	{
+		bGameWon = true;
+		return;
+	}
+	loadLevel(currentLevel + 1);
 }
 
 void Scene::addEnemy(int tileX, int tileY)
@@ -351,6 +355,10 @@ void Scene::update(int deltaTime)
 	else if(Game::instance().getKey(GLFW_KEY_4))
 	{
 		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(4); return; }
+	}
+	else if(Game::instance().getKey(GLFW_KEY_5))
+	{
+		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(5); return; }
 	}
 	else
 	{

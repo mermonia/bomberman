@@ -42,6 +42,7 @@ public:
 	void nextLevel();
 	int getCurrentLevel() const { return currentLevel; }
 	bool isGameOver() const { return bGameOver; }
+	bool isGameWon() const { return bGameWon; }
 	void resetGameOver() { bGameOver = false; bWaitingGameOver = false; bWaitingRestartLevel = false; }
 
 	void addEnemy(int tileX, int tileY);
@@ -86,6 +87,7 @@ private:
 	bool bExitUnlocked;
 	bool bGodMode;
 	bool bGameOver;
+	bool bGameWon;
 	bool bWaitingGameOver;
 	bool bWaitingRestartLevel;
 	int currentLevel;
