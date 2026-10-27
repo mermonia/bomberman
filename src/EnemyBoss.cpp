@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include "EnemyBoss.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 #define TILE_SIZE 16
 #define BOSS_SIZE 32
@@ -216,6 +217,7 @@ void EnemyBoss::die()
 	flashTimer = 0;
 	clearBullets();
 	blastSprite->changeAnimation(0);
+	AudioManager::instance().playSound(SFX_BOSS_DEATH);
 }
 
 void EnemyBoss::hit()
@@ -228,7 +230,11 @@ void EnemyBoss::hit()
 	bTeleportQueued = true;
 
 	if(hp <= 0)
+	{
 		die();
+		return;
+	}
+	AudioManager::instance().playSound(SFX_BOSS_HIT);
 }
 
 bool EnemyBoss::hitsPlayer(const glm::vec2 &playerPos, const glm::vec2 &playerSize) const
