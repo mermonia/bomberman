@@ -1,6 +1,7 @@
 #version 330
 
 uniform vec4 color;
+uniform vec4 flashColor;
 uniform sampler2D tex;
 
 in vec2 texCoordFrag;
@@ -13,6 +14,6 @@ void main()
 	vec4 texColor = texture(tex, texCoordFrag);
 	if(texColor.a < 0.5f)
 		discard;
-	outColor = color * texColor;
+	outColor = mix(color * texColor, vec4(flashColor.rgb, color.a * texColor.a), flashColor.a);
 }
 

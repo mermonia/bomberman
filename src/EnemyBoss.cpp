@@ -8,7 +8,6 @@
 #define BOSS_HP 6
 #define BOSS_HIT_FLASH_MS 1000
 #define BOSS_FLASH_BLINK_MS 80
-#define BOSS_FLASH_BRIGHTNESS 3.f
 #define BOSS_TELEPORT_PERIOD_MS 6000
 #define BOSS_FADE_MS 300
 #define BOSS_DRIFT_MS_PER_PX 40
@@ -178,7 +177,7 @@ void EnemyBoss::update(int deltaTime)
 void EnemyBoss::render()
 {
 	float alpha = fadeAlpha();
-	float brightness = isFlashBright() ? BOSS_FLASH_BRIGHTNESS : 1.f;
+	float flash = isFlashBright() ? 1.f : 0.f;
 	bool bBlend = alpha < 1.f;
 
 	if(bBlend)
@@ -186,8 +185,10 @@ void EnemyBoss::render()
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
-	program->setUniform4f("color", brightness, brightness, brightness, alpha);
+	program->setUniform4f("color", 1.f, 1.f, 1.f, alpha);
+	program->setUniform4f("flashColor", 1.f, 1.f, 1.f, flash);
 	sprite->render();
+	program->setUniform4f("flashColor", 0.f, 0.f, 0.f, 0.f);
 	program->setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
 	if(bBlend)
 		glDisable(GL_BLEND);
