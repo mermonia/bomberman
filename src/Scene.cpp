@@ -46,6 +46,7 @@ Scene::Scene()
 	bGameWon = false;
 	bWaitingGameOver = false;
 	bWaitingRestartLevel = false;
+	pendingLevel = 0;
 	currentLevel = 1;
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
@@ -156,6 +157,7 @@ void Scene::loadLevel(int levelNumber)
 	bGameOver = false;
 	bWaitingGameOver = false;
 	bWaitingRestartLevel = false;
+	pendingLevel = 0;
 	levelTimeRemaining = 215;
 	levelTimerMs = 0;
 
@@ -242,7 +244,13 @@ void Scene::nextLevel()
 		bGameWon = true;
 		return;
 	}
-	loadLevel(currentLevel + 1);
+	pendingLevel = currentLevel + 1;
+}
+
+void Scene::applyPendingLevel()
+{
+	if(pendingLevel != 0)
+		loadLevel(pendingLevel);
 }
 
 void Scene::addEnemy(int tileX, int tileY)
@@ -339,26 +347,29 @@ void Scene::applyPowerUp(PowerUpType type)
 
 void Scene::update(int deltaTime)
 {
+	if(pendingLevel != 0)
+		return;
+
 	// Tecles de trampa '1'..'4': anar directament als nivells corresponents
 	if(Game::instance().getKey(GLFW_KEY_1))
 	{
-		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(1); return; }
+		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 1; return; }
 	}
 	else if(Game::instance().getKey(GLFW_KEY_2))
 	{
-		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(2); return; }
+		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 2; return; }
 	}
 	else if(Game::instance().getKey(GLFW_KEY_3))
 	{
-		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(3); return; }
+		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 3; return; }
 	}
 	else if(Game::instance().getKey(GLFW_KEY_4))
 	{
-		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(4); return; }
+		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 4; return; }
 	}
 	else if(Game::instance().getKey(GLFW_KEY_5))
 	{
-		if(!bNumKeyPressed) { bNumKeyPressed = true; loadLevel(5); return; }
+		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 5; return; }
 	}
 	else
 	{
@@ -448,7 +459,7 @@ void Scene::update(int deltaTime)
 	else if(bWaitingRestartLevel && player != NULL && !player->isDying())
 	{
 		bWaitingRestartLevel = false;
-		loadLevel(currentLevel);
+		pendingLevel = currentLevel;
 		return;
 	}
 

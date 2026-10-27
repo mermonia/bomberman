@@ -40,6 +40,8 @@ public:
 
 	void loadLevel(int levelNumber);
 	void nextLevel();
+	bool hasPendingLevel() const { return pendingLevel != 0; }
+	void applyPendingLevel();
 	int getCurrentLevel() const { return currentLevel; }
 	bool isGameOver() const { return bGameOver; }
 	bool isGameWon() const { return bGameWon; }
@@ -90,6 +92,7 @@ private:
 	bool bGameWon;
 	bool bWaitingGameOver;
 	bool bWaitingRestartLevel;
+	int pendingLevel;
 	int currentLevel;
 	int maxSimultaneousBombs;
 	int bombFlameRadius;
