@@ -27,6 +27,7 @@ Player::Player()
 	sprite = NULL;
 	spriteDeath = NULL;
 	map = NULL;
+	program = NULL;
 	spawnPos = glm::ivec2(0, 0);
 	jumpAngle = 0.f;
 	walkRemainder = 0.f;
@@ -52,6 +53,7 @@ Player::~Player()
 void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	bJumping = false;
+	program = &shaderProgram;
 	spritesheet.loadFromFile(assetPath("images/player.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
@@ -330,6 +332,10 @@ void Player::update(int deltaTime)
 
 void Player::render()
 {
+	bool bTinted = bGodTint && program != NULL;
+	if(bTinted)
+		program->setUniform4f("color", 1.0f, 0.85f, 0.3f, 1.0f);
+
 	if(bDying || bEnteringDoor)
 	{
 		if(spriteDeath != NULL)
@@ -340,6 +346,9 @@ void Player::render()
 		if(invulnerableTime <= 0 || (invulnerableTime / 100) % 2 == 0)
 			sprite->render();
 	}
+
+	if(bTinted)
+		program->setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Player::setTileMap(TileMap *tileMap)
