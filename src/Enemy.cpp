@@ -186,3 +186,13 @@ void Enemy::die()
 	dyingTime = 0;
 	sprite->changeAnimation(DIE);
 }
+
+void Enemy::hit()
+{
+	die();
+}
+
+bool Enemy::hitsPlayer(const glm::vec2 &playerPos, const glm::vec2 &playerSize) const
+{
+	return false;
+}
