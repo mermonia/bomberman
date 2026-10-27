@@ -355,7 +355,8 @@ void Scene::update(int deltaTime)
 	currentTime += deltaTime;
 
 	// Compte enrere del temporitzador de la barra inferior
-	if(levelTimeRemaining > 0)
+	bool bClockRunning = !bLevelCleared && player != NULL && !player->isDying();
+	if(levelTimeRemaining > 0 && bClockRunning)
 	{
 		levelTimerMs += deltaTime;
 		while(levelTimerMs >= 1000)
@@ -508,7 +509,7 @@ void Scene::update(int deltaTime)
 
 void Scene::handlePlayerDeath(bool byBomb)
 {
-	if(player == NULL || player->isDying())
+	if(player == NULL || player->isDying() || player->isEnteringDoor())
 		return;
 
 	player->die(byBomb);
