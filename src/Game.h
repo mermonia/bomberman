@@ -15,6 +15,18 @@
 #define WINDOW_WIDTH 1440
 #define WINDOW_HEIGHT 960
 
+#define FADE_OUT_TIME 200
+#define FADE_IN_TIME 200
+#define FADE_STEPS 4
+
+
+enum TransitionPhase
+{
+	FADE_NONE = 0,
+	FADE_OUT,
+	FADE_IN
+};
+
 
 // Game is a singleton (a class with a single instance) that represents our whole application
 
@@ -23,7 +35,7 @@ class Game
 {
 
 private:
-	Game() : bPlay(true), state(STATE_MENU), bSceneInited(false) {}
+	Game() : bPlay(true), state(STATE_MENU), bSceneInited(false), fadePhase(FADE_NONE), fadeTimer(0), pendingState(STATE_MENU), bPendingNewGame(false), bPendingResetScene(false), bPendingGameOver(false), bPendingLevel(false), fadeVao(0), fadeVbo(0), fadePosLocation(-1) {}
 	
 public:
 	static Game &instance()
@@ -47,7 +59,13 @@ public:
 	bool getKey(int key) const;
 
 	GameState getState() const { return state; }
-	void setState(GameState s) { state = s; }
+	void changeState(GameState target);
+
+private:
+	void initFade();
+	void updateFade(int deltaTime);
+	void applyTransition();
+	void renderFade();
 
 private:
 	bool bPlay; // Continue to play game?
@@ -57,6 +75,18 @@ private:
 	bool bSceneInited;
 	Scene scene;
 	MainMenu mainMenu;
+
+	TransitionPhase fadePhase;
+	int fadeTimer;
+	GameState pendingState;
+	bool bPendingNewGame;
+	bool bPendingResetScene;
+	bool bPendingGameOver;
+	bool bPendingLevel;
+	ShaderProgram fadeProgram;
+	GLuint fadeVao;
+	GLuint fadeVbo;
+	GLint fadePosLocation;
 
 };
 
