@@ -293,6 +293,16 @@ void Scene::addEnemyPufferfish(int tileX, int tileY)
 	enemies.push_back(newEnemyPufferfish);
 }
 
+void Scene::addEnemyBoss(int tileX, int tileY)
+{
+	EnemyBoss *newEnemyBoss = new EnemyBoss();
+	newEnemyBoss->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	newEnemyBoss->setPosition(glm::vec2(tileX * map->getTileSize(), tileY * map->getTileSize()));
+	newEnemyBoss->setTileMap(map);
+	newEnemyBoss->setPlayer(player);
+	enemies.push_back(newEnemyBoss);
+}
+
 void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
 {
 	if(type == "patrol")
@@ -303,6 +313,8 @@ void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
 		addEnemyParachute(tileX, tileY);
 	else if(type == "pufferfish")
 		addEnemyPufferfish(tileX, tileY);
+	else if(type == "boss")
+		addEnemyBoss(tileX, tileY);
 	else
 		cout << "Unknown ENEMY type in level file: " << type << endl;
 }

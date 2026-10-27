@@ -7,7 +7,7 @@ AIR 4
 BUSH 3
 DOOR 15 9
 PLAYER 2 38
-ENEMY patrol 8 9
+ENEMY boss 7 3
 ENEMY patrol 9 38
 ENEMY chaser 11 32
 ENEMY patrol 4 23
