@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include "EnemyPufferfish.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 #define TILE_SIZE 16
 #define PUFFERFISH_SWIM_SPEED 1.f
@@ -255,6 +256,7 @@ void EnemyPufferfish::die()
 	if(bDying)
 		return;
 	bDying = true;
+	AudioManager::instance().playSound(SFX_ENEMY_DIE);
 	bDead = false;
 	dyingTime = 0;
 	if(sprite != NULL)

@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include "EnemyParachute.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 #define TILE_SIZE 16
 #define PARACHUTE_GRAVITY 30.f
@@ -319,6 +320,7 @@ void EnemyParachute::die()
 	if(bDying)
 		return;
 	bDying = true;
+	AudioManager::instance().playSound(SFX_ENEMY_DIE);
 	bDead = false;
 	dyingTime = 0;
 	sprite->changeAnimation(ENEMY_PARACHUTE_DIE);

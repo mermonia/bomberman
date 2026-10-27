@@ -6,6 +6,7 @@
 #include "Enemy.h"
 #include "Player.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 
 #define ENEMY_CHASE_SPEED 2.5f
 
@@ -225,6 +226,7 @@ public:
 		if(bDying)
 			return;
 		bDying = true;
+		AudioManager::instance().playSound(SFX_ENEMY_DIE);
 		bDead = false;
 		dyingTime = 0;
 		if(sprite != NULL)

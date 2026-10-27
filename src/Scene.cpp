@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Scene.h"
 #include "AssetPath.h"
+#include "AudioManager.h"
 #include "Game.h"
 
 
@@ -326,6 +327,7 @@ void Scene::spawnPowerUp(int tileX, int tileY)
 
 void Scene::applyPowerUp(PowerUpType type)
 {
+	AudioManager::instance().playSound(SFX_PICKUP);
 	switch(type)
 	{
 	case POWERUP_BOMB_UP:
@@ -387,6 +389,8 @@ void Scene::update(int deltaTime)
 				if(enemies[i] != NULL && !enemies[i]->isDead() && !enemies[i]->isDying())
 					enemies[i]->die();
 			}
+			if(!bDoorOpen)
+				AudioManager::instance().playSound(SFX_DOOR_OPEN);
 			bExitUnlocked = true;
 			bDoorOpen = true;
 		}
@@ -487,6 +491,7 @@ void Scene::update(int deltaTime)
 	// Quan no queda cap enemic viu, desbloquejar la sortida
 	if(aliveEnemies == 0 && !bDoorOpen)
 	{
+		AudioManager::instance().playSound(SFX_DOOR_OPEN);
 		bExitUnlocked = true;
 		bDoorOpen = true;
 	}
@@ -518,6 +523,8 @@ void Scene::update(int deltaTime)
 		bLevelCleared = true;
 		levelClearTimer = 0;
 		player->enterDoor();
+		AudioManager::instance().playSound(SFX_DOOR_ENTER);
+		AudioManager::instance().playMusic(JINGLE_STAGE_CLEAR);
 	}
 
 	if(bLevelCleared)
@@ -586,6 +593,7 @@ void Scene::handlePlayerDeath(bool byBomb)
 		return;
 
 	player->die(byBomb);
+	AudioManager::instance().playMusic(JINGLE_MISS);
 
 	// En morir, es perden els power-ups temporals com al joc original
 	maxSimultaneousBombs = 1;
@@ -677,6 +685,7 @@ void Scene::dropBomb()
 
 	Bomb *newBomb = new Bomb(glm::ivec2(tileX, tileY), glm::ivec2(SCREEN_X, SCREEN_Y), &spritesheetBomb, &texProgram, map, bombFlameRadius);
 	bombs.push_back(newBomb);
+	AudioManager::instance().playSound(SFX_BOMB_PLACE);
 }
 
 void Scene::updateBombSolids()
