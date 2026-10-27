@@ -27,6 +27,9 @@ Scene::Scene()
 {
 	map = NULL;
 	player = NULL;
+	doorSprite = NULL;
+	bResourcesLoaded = false;
+	bDoorOpen = false;
 	powerUps.clear();
 	bBombKeyPressed = false;
 	bKKeyPressed = false;
@@ -56,6 +59,8 @@ Scene::~Scene()
 		delete map;
 	if(player != NULL)
 		delete player;
+	if(doorSprite != NULL)
+		delete doorSprite;
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
 		if(enemies[i] != NULL)
@@ -79,21 +84,11 @@ Scene::~Scene()
 
 void Scene::init()
 {
-	initShaders();
-
-	// Carregar textura de la bomba (bomba2.png)
-	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
-	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
-	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
-	spritesheetBomb.setMinFilter(GL_NEAREST);
-	spritesheetBomb.setMagFilter(GL_NEAREST);
-
-	// Carregar textura dels power-ups (power-ups.png)
-	spritesheetPowerUps.loadFromFile(assetPath("images/power-ups.png"), TEXTURE_PIXEL_FORMAT_RGBA);
-	spritesheetPowerUps.setWrapS(GL_CLAMP_TO_EDGE);
-	spritesheetPowerUps.setWrapT(GL_CLAMP_TO_EDGE);
-	spritesheetPowerUps.setMinFilter(GL_NEAREST);
-	spritesheetPowerUps.setMagFilter(GL_NEAREST);
+	if(!bResourcesLoaded)
+	{
+		loadResources();
+		bResourcesLoaded = true;
+	}
 
 	currentTime = 0.0f;
 	srand((unsigned int)time(NULL));
@@ -108,9 +103,39 @@ void Scene::init()
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
 
-	hud.init(&texProgram);
-
 	loadLevel(1);
+}
+
+void Scene::loadResources()
+{
+	initShaders();
+
+	// Carregar textura de la bomba (bomba.png)
+	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetBomb.setMinFilter(GL_NEAREST);
+	spritesheetBomb.setMagFilter(GL_NEAREST);
+
+	// Carregar textura dels power-ups (power-ups.png)
+	spritesheetPowerUps.loadFromFile(assetPath("images/power-ups.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetPowerUps.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetPowerUps.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetPowerUps.setMinFilter(GL_NEAREST);
+	spritesheetPowerUps.setMagFilter(GL_NEAREST);
+
+	spritesheetDoor.loadFromFile(assetPath("images/door_open.png"), TEXTURE_PIXEL_FORMAT_RGBA);
+	spritesheetDoor.setWrapS(GL_CLAMP_TO_EDGE);
+	spritesheetDoor.setWrapT(GL_CLAMP_TO_EDGE);
+	spritesheetDoor.setMinFilter(GL_NEAREST);
+	spritesheetDoor.setMagFilter(GL_NEAREST);
+
+	doorSprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(1.f, 1.f), &spritesheetDoor, &texProgram);
+	doorSprite->setNumberAnimations(1);
+	doorSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
+	doorSprite->changeAnimation(0);
+
+	hud.init(&texProgram);
 }
 
 void Scene::loadLevel(int levelNumber)
@@ -173,6 +198,12 @@ void Scene::loadLevel(int levelNumber)
 	bLevelCleared = false;
 	levelClearTimer = 0;
 	bExitUnlocked = false;
+	bDoorOpen = false;
+	if(map->hasDoor())
+	{
+		glm::ivec2 doorTile = map->getDoorTile();
+		doorSprite->setPosition(glm::vec2(float(SCREEN_X + doorTile.x * map->getTileSize()), float(SCREEN_Y + doorTile.y * map->getTileSize())));
+	}
 
 	const vector<EnemySpawn> &spawns = map->getEnemySpawns();
 	if(spawns.empty())
@@ -330,6 +361,7 @@ void Scene::update(int deltaTime)
 					enemies[i]->die();
 			}
 			bExitUnlocked = true;
+			bDoorOpen = true;
 		}
 	}
 	else
@@ -413,9 +445,10 @@ void Scene::update(int deltaTime)
 	}
 
 	// Quan no queda cap enemic viu, desbloquejar la sortida
-	if(aliveEnemies == 0 && !bLevelCleared)
+	if(aliveEnemies == 0 && !bDoorOpen)
 	{
 		bExitUnlocked = true;
+		bDoorOpen = true;
 	}
 
 	// Comprovar si el jugador està davant de la porta
@@ -439,7 +472,7 @@ void Scene::update(int deltaTime)
 
 	// Quan la sortida està desbloquejada i el jugador es posa davant de la porta:
 	// Es mostra la imatge de player_death (animació porta) i es passa al següent nivell
-	if(bExitUnlocked && bPlayerAtDoor && !bLevelCleared && player != NULL && !player->isDying())
+	if(bDoorOpen && bPlayerAtDoor && !bLevelCleared && player != NULL && !player->isDying())
 	{
 		bExitUnlocked = false;
 		bLevelCleared = true;
@@ -785,6 +818,9 @@ void Scene::render()
 
 	if(map != NULL)
 		map->render();
+
+	if(bDoorOpen && map != NULL && map->hasDoor())
+		doorSprite->render();
 
 	for(unsigned int i = 0; i < powerUps.size(); i++)
 	{

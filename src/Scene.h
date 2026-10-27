@@ -55,6 +55,7 @@ public:
 	void applyPowerUp(PowerUpType type);
 
 private:
+	void loadResources();
 	void initShaders();
 	void updateCamera();
 	void checkCollisions();
@@ -71,6 +72,10 @@ private:
 	vector<PowerUp *> powerUps;
 	Texture spritesheetBomb;
 	Texture spritesheetPowerUps;
+	Texture spritesheetDoor;
+	Sprite *doorSprite;
+	bool bResourcesLoaded;
+	bool bDoorOpen;
 	bool bBombKeyPressed;
 	bool bKKeyPressed;
 	bool bNumKeyPressed;
