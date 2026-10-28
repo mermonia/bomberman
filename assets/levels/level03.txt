@@ -7,6 +7,7 @@ AIR 9
 PLAYER 3 32
 ENEMY patrol 7 32
 ENEMY patrol 11 26
+ENEMY patrol 6 20
 ENEMY chaser 8 15
 ENEMY parachute 4 2
 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3
