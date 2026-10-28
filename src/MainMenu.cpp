@@ -89,6 +89,7 @@ MainMenu::MainMenu()
 	  sheetW(0), sheetH(0),
 	  selectedOption(0), animTimer(0), bGameInProgress(false),
 	  gameOverTimer(0), bGameOverDone(false),
+	  winTimer(0), bWinDone(false),
 	  logoRect{26, 95, 115, 98},
 	  treeRect{735, 18, 155, 126},
 	  copyrightRect{12, 215, 145, 30},
@@ -373,6 +374,12 @@ void MainMenu::loadSpriteSheet()
 	stbi_image_free(data);
 }
 
+void MainMenu::startWin()
+{
+	winTimer = 0;
+	bWinDone = false;
+}
+
 void MainMenu::startGameOver()
 {
 	gameOverTimer = 0;
@@ -383,6 +390,9 @@ void MainMenu::update(int deltaTime)
 {
 	animTimer += deltaTime;
 	gameOverTimer += deltaTime;
+	winTimer += deltaTime;
+	if(winTimer >= 9000)
+		bWinDone = true;
 	if(gameOverTimer >= 6500)
 		bGameOverDone = true;
 
@@ -532,6 +542,7 @@ void MainMenu::render(GameState screenState)
 	case STATE_INSTRUCTIONS: drawInstructionsScreen(); break;
 	case STATE_CREDITS:      drawCreditsScreen();      break;
 	case STATE_GAME_OVER:    drawGameOverScreen();     break;
+	case STATE_WIN:          drawWinScreen();          break;
 	default: break;
 	}
 
@@ -687,6 +698,53 @@ void MainMenu::drawCreditsScreen()
 	float blink = 0.5f + 0.5f * std::sin(float(animTimer) * 0.006f);
 	renderStringCentered("PREM ESC O ENTER PER TORNAR", 120, 147,
 	                     0.85f, 5.2f, glm::vec4(blink, blink, blink, 1.0f));
+}
+
+void MainMenu::drawWinScreen()
+{
+	renderSolidQuad(0, 0, 240, 160, glm::vec4(0.03f, 0.06f, 0.14f, 1.0f));
+
+	for(size_t i = 0; i < dots.size(); i++)
+	{
+		float a = 0.35f + 0.35f * std::sin(dots[i].phase + float(animTimer) * 0.007f);
+		renderSolidQuad(dots[i].x, dots[i].y, 1.5f, 1.5f, glm::vec4(1.0f, 0.85f, 0.25f, a));
+	}
+
+	float bx = 14, by = 12, bw = 212, bh = 136;
+	renderSolidQuad(bx, by, bw, bh, glm::vec4(0.05f, 0.08f, 0.20f, 0.92f));
+	glm::vec4 gold(1.0f, 0.85f, 0.25f, 1.0f);
+	renderSolidQuad(bx, by, bw, 1, gold);
+	renderSolidQuad(bx, by + bh - 1, bw, 1, gold);
+	renderSolidQuad(bx, by, 1, bh, gold);
+	renderSolidQuad(bx + bw - 1, by, 1, bh, gold);
+
+	float pulseTitle = 0.85f + 0.15f * std::sin(float(animTimer) * 0.005f);
+	renderStringCentered("HAS GUANYAT!", 120.0f, 22.0f,
+	                     1.2f, 9.0f, glm::vec4(gold.r * pulseTitle, gold.g * pulseTitle, gold.b * pulseTitle, 1.0f));
+
+	glm::vec4 cyan(0.4f, 0.9f, 1.0f, 1.0f);
+	glm::vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::vec4 yellow(0.95f, 0.92f, 0.35f, 1.0f);
+
+	float y = 44.0f;
+	renderStringCentered("ENHORABONA! HAS COMPLETAT EL JOC", 120.0f, y, 0.85f, 5.2f, cyan); y += 13.0f;
+	renderStringCentered("TOTS ELS 5 NIVELLS SUPERATS!", 120.0f, y, 0.95f, 6.0f, yellow); y += 13.0f;
+	renderStringCentered("HAS DERROTAT EL BOSS FINAL", 120.0f, y, 0.85f, 5.2f, white); y += 16.0f;
+
+	if(logoRect.w > 0 && logoRect.h > 0)
+	{
+		float scaleX = 90.0f / float(logoRect.w);
+		float scaleY = 24.0f / float(logoRect.h);
+		float s = std::min(scaleX, scaleY);
+		float lw = float(logoRect.w) * s;
+		float lh = float(logoRect.h) * s;
+		float lx = (240.0f - lw) * 0.5f;
+		renderRegion(logoRect.x, logoRect.y, logoRect.w, logoRect.h, lx, y, lw, lh);
+	}
+
+	float blink = 0.5f + 0.5f * std::sin(float(animTimer) * 0.007f);
+	renderStringCentered("PREM ENTER PER TORNAR AL MENU", 120.0f, 134.0f,
+	                     0.80f, 4.8f, glm::vec4(blink, blink, blink, 1.0f));
 }
 
 void MainMenu::drawGameOverScreen()

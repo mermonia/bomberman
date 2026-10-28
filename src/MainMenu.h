@@ -13,7 +13,8 @@ enum GameState
 	STATE_PLAY,
 	STATE_INSTRUCTIONS,
 	STATE_CREDITS,
-	STATE_GAME_OVER
+	STATE_GAME_OVER,
+	STATE_WIN
 };
 
 enum MenuAction
@@ -45,6 +46,9 @@ public:
 	void startGameOver();
 	bool isGameOverFinished() const { return bGameOverDone; }
 
+	void startWin();
+	bool isWinFinished() const { return bWinDone; }
+
 private:
 	void initShaders();
 	void loadSpriteSheet();
@@ -64,6 +68,7 @@ private:
 	void drawInstructionsScreen();
 	void drawCreditsScreen();
 	void drawGameOverScreen();
+	void drawWinScreen();
 
 	void renderRegion(int srcX, int srcY, int srcW, int srcH,
 	                  float dstX, float dstY, float dstW, float dstH);
@@ -84,6 +89,8 @@ private:
 	bool bGameInProgress;
 	int gameOverTimer;
 	bool bGameOverDone;
+	int winTimer;
+	bool bWinDone;
 
 	SpriteRect logoRect;
 	SpriteRect treeRect;

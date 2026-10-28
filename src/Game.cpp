@@ -11,6 +11,7 @@ void Game::init()
 	bPlay = true;
 	state = STATE_MENU;
 	bSceneInited = false;
+	bPendingWin = false;
 
 	for(int i = 0; i <= GLFW_KEY_LAST; i++)
 		keys[i] = false;
@@ -52,8 +53,8 @@ bool Game::update(int deltaTime)
 		}
 		else if(scene.isGameWon())
 		{
-			bPendingResetScene = true;
-			changeState(STATE_MENU);
+			bPendingWin = true;
+			changeState(STATE_WIN);
 		}
 		else if(scene.hasPendingLevel())
 		{
@@ -64,6 +65,14 @@ bool Game::update(int deltaTime)
 	case STATE_GAME_OVER:
 		mainMenu.update(deltaTime);
 		if(mainMenu.isGameOverFinished())
+		{
+			bPendingResetScene = true;
+			changeState(STATE_MENU);
+		}
+		break;
+	case STATE_WIN:
+		mainMenu.update(deltaTime);
+		if(mainMenu.isWinFinished())
 		{
 			bPendingResetScene = true;
 			changeState(STATE_MENU);
@@ -84,6 +93,7 @@ void Game::render()
 	case STATE_INSTRUCTIONS:
 	case STATE_CREDITS:
 	case STATE_GAME_OVER:
+	case STATE_WIN:
 		mainMenu.render(state);
 		break;
 	case STATE_PLAY:
@@ -133,6 +143,7 @@ void Game::keyPressed(int key)
 			changeState(STATE_MENU);
 		break;
 	case STATE_GAME_OVER:
+	case STATE_WIN:
 		if(key == GLFW_KEY_ESCAPE || key == GLFW_KEY_ENTER || key == GLFW_KEY_SPACE)
 		{
 			bPendingResetScene = true;
@@ -259,21 +270,26 @@ void Game::applyTransition()
 		bSceneInited = false;
 	if(bPendingGameOver)
 		mainMenu.startGameOver();
+	if(bPendingWin)
+		mainMenu.startWin();
 	if(bPendingLevel)
 		scene.applyPendingLevel();
 
 	bPendingNewGame = false;
 	bPendingResetScene = false;
 	bPendingGameOver = false;
+	bPendingWin = false;
 	bPendingLevel = false;
 
 	mainMenu.setGameInProgress(bSceneInited);
-	if(state == STATE_GAME_OVER && pendingState != STATE_GAME_OVER)
+	if((state == STATE_GAME_OVER || state == STATE_WIN) && (pendingState != STATE_GAME_OVER && pendingState != STATE_WIN))
 		AudioManager::instance().stopMusic();
 	state = pendingState;
 
 	if(state == STATE_PLAY)
 		AudioManager::instance().playMusic(AudioManager::musicForLevel(scene.getCurrentLevel()));
+	else if(state == STATE_WIN)
+		AudioManager::instance().playMusic(JINGLE_STAGE_CLEAR);
 	else if(state == STATE_GAME_OVER)
 		AudioManager::instance().playMusic(JINGLE_GAME_OVER);
 	else

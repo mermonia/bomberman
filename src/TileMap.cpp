@@ -26,6 +26,9 @@ TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProg
 	doorTile = glm::ivec2(-1, -1);
 	doorTileId = -1;
 	bushTiles.clear();
+	fadingBushes.clear();
+	fadingVao = 0;
+	fadingVbo = 0;
 	renderMinCoords = minCoords;
 	renderProgram = &program;
 	barrierTopTile = -1;
@@ -63,6 +66,13 @@ void TileMap::update(int deltaTime)
 			collapsingBarriers.erase(collapsingBarriers.begin() + i);
 	}
 
+	for(int i = int(fadingBushes.size()) - 1; i >= 0; i--)
+	{
+		fadingBushes[i].timer -= deltaTime;
+		if(fadingBushes[i].timer <= 0)
+			fadingBushes.erase(fadingBushes.begin() + i);
+	}
+
 	if(bRebuild)
 	{
 		free();
@@ -78,6 +88,53 @@ void TileMap::render() const
 	glEnableVertexAttribArray(posLocation);
 	glEnableVertexAttribArray(texCoordLocation);
 	glDrawArrays(GL_TRIANGLES, 0, 6 * nTiles);
+
+	if(!fadingBushes.empty() && renderProgram != NULL && fadingVao != 0)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBindVertexArray(fadingVao);
+		glBindBuffer(GL_ARRAY_BUFFER, fadingVbo);
+		glEnableVertexAttribArray(posLocation);
+		glEnableVertexAttribArray(texCoordLocation);
+
+		for(unsigned int b = 0; b < fadingBushes.size(); b++)
+		{
+			const FadingBush &fb = fadingBushes[b];
+			float alpha = float(fb.timer) / float(fb.totalTime);
+			if(alpha < 0.f) alpha = 0.f;
+			if(alpha > 1.f) alpha = 1.f;
+
+			float x0 = renderMinCoords.x + fb.tileX * tileSize;
+			float y0 = renderMinCoords.y + fb.tileY * tileSize;
+			float x1 = x0 + blockSize;
+			float y1 = y0 + blockSize;
+
+			int tileIdx = zeroBased ? fb.tileId : (fb.tileId - 1);
+			float u0 = float(tileIdx % tilesheetSize.x) / tilesheetSize.x;
+			float v0 = float(tileIdx / tilesheetSize.x) / tilesheetSize.y;
+			float u1 = u0 + tileTexSize.x;
+			float v1 = v0 + tileTexSize.y;
+
+			float vertices[24] = {
+				x0, y0, u0, v0,
+				x1, y0, u1, v0,
+				x1, y1, u1, v1,
+				x0, y0, u0, v0,
+				x1, y1, u1, v1,
+				x0, y1, u0, v1
+			};
+
+			glBufferSubData(GL_ARRAY_BUFFER, 0, 24 * sizeof(float), vertices);
+			renderProgram->setUniform4f("color", 1.0f, 1.0f, 1.0f, alpha);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+
+		glBindVertexArray(0);
+		glDisable(GL_BLEND);
+		renderProgram->setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+	}
+
 	glDisable(GL_TEXTURE_2D);
 }
 
@@ -85,6 +142,13 @@ void TileMap::free()
 {
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
+	if(fadingVao != 0)
+	{
+		glDeleteVertexArrays(1, &fadingVao);
+		glDeleteBuffers(1, &fadingVbo);
+		fadingVao = 0;
+		fadingVbo = 0;
+	}
 }
 
 bool TileMap::loadLevel(const string &levelFile)
@@ -97,6 +161,7 @@ bool TileMap::loadLevel(const string &levelFile)
 	fin.open(levelFile.c_str());
 	if(!fin.is_open())
 		return false;
+	fadingBushes.clear();
 	getline(fin, line);
 	if(line.compare(0, 7, "TILEMAP") != 0)
 		return false;
@@ -317,6 +382,15 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 	glBufferData(GL_ARRAY_BUFFER, 24 * nTiles * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 	posLocation = program.bindVertexAttribute("position", 2, 4*sizeof(float), 0);
 	texCoordLocation = program.bindVertexAttribute("texCoord", 2, 4*sizeof(float), (void *)(2*sizeof(float)));
+
+	glGenVertexArrays(1, &fadingVao);
+	glBindVertexArray(fadingVao);
+	glGenBuffers(1, &fadingVbo);
+	glBindBuffer(GL_ARRAY_BUFFER, fadingVbo);
+	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+	program.bindVertexAttribute("position", 2, 4*sizeof(float), 0);
+	program.bindVertexAttribute("texCoord", 2, 4*sizeof(float), (void *)(2*sizeof(float)));
+	glBindVertexArray(0);
 }
 
 bool TileMap::collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const
@@ -376,11 +450,8 @@ bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, i
 	{
 		if(isBlockedTile(x, y))
 		{
-			if(*posY - tileSize * y + size.y <= 10)
-			{
-				*posY = tileSize * y - size.y;
-				return true;
-			}
+			*posY = tileSize * y - size.y;
+			return true;
 		}
 	}
 
@@ -433,10 +504,22 @@ bool TileMap::isBlockedTile(int tileX, int tileY) const
 	return isSolidTile(map[tileY * mapSize.x + tileX]) || dynamicSolid[tileY * mapSize.x + tileX];
 }
 
+bool TileMap::isFadingBush(int tileX, int tileY) const
+{
+	for(unsigned int i = 0; i < fadingBushes.size(); i++)
+	{
+		if(fadingBushes[i].tileX == tileX && fadingBushes[i].tileY == tileY)
+			return true;
+	}
+	return false;
+}
+
 bool TileMap::isBush(int tileX, int tileY) const
 {
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
+	if(isFadingBush(tileX, tileY))
+		return true;
 	int t = map[tileY * mapSize.x + tileX];
 	for(unsigned int i = 0; i < bushTiles.size(); i++)
 	{
@@ -448,8 +531,61 @@ bool TileMap::isBush(int tileX, int tileY) const
 
 bool TileMap::destroyBush(int tileX, int tileY)
 {
-	if(!isBush(tileX, tileY))
+	for(unsigned int i = 0; i < fadingBushes.size(); i++)
+	{
+		if(fadingBushes[i].tileX == tileX && fadingBushes[i].tileY == tileY)
+		{
+			fadingBushes.erase(fadingBushes.begin() + i);
+			break;
+		}
+	}
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
+	int t = map[tileY * mapSize.x + tileX];
+	bool isB = false;
+	for(unsigned int i = 0; i < bushTiles.size(); i++)
+	{
+		if(bushTiles[i] == t)
+		{
+			isB = true;
+			break;
+		}
+	}
+	if(!isB)
+		return false;
+	map[tileY * mapSize.x + tileX] = airTile;
+	free();
+	prepareArrays(renderMinCoords, *renderProgram);
+	return true;
+}
+
+bool TileMap::destroyBushFade(int tileX, int tileY, int fadeTimeMs)
+{
+	if(isFadingBush(tileX, tileY))
+		return false;
+	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
+		return false;
+	int t = map[tileY * mapSize.x + tileX];
+	bool isB = false;
+	for(unsigned int i = 0; i < bushTiles.size(); i++)
+	{
+		if(bushTiles[i] == t)
+		{
+			isB = true;
+			break;
+		}
+	}
+	if(!isB)
+		return false;
+
+	FadingBush fb;
+	fb.tileX = tileX;
+	fb.tileY = tileY;
+	fb.tileId = t;
+	fb.timer = fadeTimeMs;
+	fb.totalTime = fadeTimeMs;
+	fadingBushes.push_back(fb);
+
 	map[tileY * mapSize.x + tileX] = airTile;
 	free();
 	prepareArrays(renderMinCoords, *renderProgram);
