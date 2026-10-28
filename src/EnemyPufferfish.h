@@ -37,4 +37,4 @@ private:
 	float verticalRemainder;
 };
 
-#endif // _ENEMYPUFFERFISH_INCLUDE
+#endif

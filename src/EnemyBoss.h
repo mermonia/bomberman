@@ -5,11 +5,9 @@
 #include "Enemy.h"
 #include "Player.h"
 
-
 #define BOSS_MAX_BULLETS 8
 #define BOSS_TELEPORT_POINTS 5
 #define BOSS_DEATH_BLASTS 6
-
 
 enum BossState
 {
@@ -24,7 +22,6 @@ struct BossBullet
 	int moveTimer;
 	bool bAlive;
 };
-
 
 class EnemyBoss : public Enemy
 {
@@ -80,5 +77,4 @@ private:
 
 };
 
-
-#endif // _ENEMYBOSS_INCLUDE
+#endif

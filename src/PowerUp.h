@@ -29,15 +29,11 @@ public:
 		float tw = (spritesheet != NULL && spritesheet->width() > 0) ? float(spritesheet->width()) : 64.f;
 		float th = (spritesheet != NULL && spritesheet->height() > 0) ? float(spritesheet->height()) : 64.f;
 
-		// Mida d'un bloc en el spritesheet: 16x16 px
 		glm::vec2 sizeInSheet(16.f / tw, 16.f / th);
 		sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSheet, spritesheet, program);
 		sprite->setNumberAnimations(1);
 		sprite->setAnimationSpeed(0, 1);
 
-		// Coordenades en power-ups.png:
-		// Fila 0: Col 0 (Bomb Up), Col 1 (Heart), Col 2 (Fire Up)
-		// Fila 1: Col 0 (Speed Up / Skate)
 		glm::vec2 frameCoord(0.f);
 		switch(type)
 		{
@@ -115,4 +111,4 @@ private:
 	Sprite *sprite;
 };
 
-#endif // _POWERUP_INCLUDE
+#endif

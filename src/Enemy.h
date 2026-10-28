@@ -5,10 +5,6 @@
 #include "Sprite.h"
 #include "TileMap.h"
 
-// Enemy represents a patrolling ground enemy based on Player.
-// It moves horizontally until it hits a wall or reaches a cliff (precipice),
-// at which point it turns around and moves in the opposite direction.
-
 #define ENEMY_PATROL_SPEED 1.25f
 
 enum EnemyDirection
@@ -25,7 +21,7 @@ public:
 	virtual void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram);
 	virtual void update(int deltaTime);
 	virtual void render();
-	
+
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
 	glm::ivec2 getPosition() const { return posEnemy; }
@@ -52,4 +48,4 @@ protected:
 	float moveRemainder;
 };
 
-#endif // _ENEMY_INCLUDE
+#endif

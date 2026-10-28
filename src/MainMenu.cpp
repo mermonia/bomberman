@@ -14,127 +14,65 @@
 #include "AssetPath.h"
 #include "AudioManager.h"
 
-// ─── Built-in 8×8 bitmap font ────────────────────────────────────────────────
-// Covers ASCII 32 (' ') through 90 ('Z') → 59 glyphs.
-// Each glyph is 8 rows of 8 bits (MSB = leftmost pixel).
 static const unsigned char FONT_8x8[59][8] = {
-	// 32 ' '
 	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
-	// 33 '!'
 	{0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00},
-	// 34 '"'
 	{0x6C,0x6C,0x00,0x00,0x00,0x00,0x00,0x00},
-	// 35 '#'
 	{0x6C,0xFE,0x6C,0x6C,0xFE,0x6C,0x00,0x00},
-	// 36 '$'
 	{0x18,0x7E,0xC0,0x7C,0x06,0xFC,0x18,0x00},
-	// 37 '%'
 	{0xC6,0xCC,0x18,0x30,0x66,0xC6,0x00,0x00},
-	// 38 '&'
 	{0x38,0x6C,0x38,0x76,0xDC,0xCC,0x76,0x00},
-	// 39 '\''
 	{0x18,0x18,0x30,0x00,0x00,0x00,0x00,0x00},
-	// 40 '('
 	{0x0C,0x18,0x30,0x30,0x30,0x18,0x0C,0x00},
-	// 41 ')'
 	{0x30,0x18,0x0C,0x0C,0x0C,0x18,0x30,0x00},
-	// 42 '*'
 	{0x00,0x66,0x3C,0xFF,0x3C,0x66,0x00,0x00},
-	// 43 '+'
 	{0x00,0x18,0x18,0x7E,0x18,0x18,0x00,0x00},
-	// 44 ','
 	{0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x30},
-	// 45 '-'
 	{0x00,0x00,0x00,0x7E,0x00,0x00,0x00,0x00},
-	// 46 '.'
 	{0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x00},
-	// 47 '/'
 	{0x06,0x0C,0x18,0x30,0x60,0xC0,0x00,0x00},
-	// 48 '0'
 	{0x3C,0x66,0x6E,0x76,0x66,0x66,0x3C,0x00},
-	// 49 '1'
 	{0x18,0x38,0x18,0x18,0x18,0x18,0x7E,0x00},
-	// 50 '2'
 	{0x3C,0x66,0x06,0x0C,0x18,0x30,0x7E,0x00},
-	// 51 '3'
 	{0x3C,0x66,0x06,0x1C,0x06,0x66,0x3C,0x00},
-	// 52 '4'
 	{0x0C,0x1C,0x3C,0x6C,0x7E,0x0C,0x0C,0x00},
-	// 53 '5'
 	{0x7E,0x60,0x7C,0x06,0x06,0x66,0x3C,0x00},
-	// 54 '6'
 	{0x1C,0x30,0x60,0x7C,0x66,0x66,0x3C,0x00},
-	// 55 '7'
 	{0x7E,0x06,0x0C,0x18,0x30,0x30,0x30,0x00},
-	// 56 '8'
 	{0x3C,0x66,0x66,0x3C,0x66,0x66,0x3C,0x00},
-	// 57 '9'
 	{0x3C,0x66,0x66,0x3E,0x06,0x0C,0x38,0x00},
-	// 58 ':'
 	{0x00,0x18,0x18,0x00,0x18,0x18,0x00,0x00},
-	// 59 ';'
 	{0x00,0x18,0x18,0x00,0x18,0x18,0x30,0x00},
-	// 60 '<'
 	{0x0C,0x18,0x30,0x60,0x30,0x18,0x0C,0x00},
-	// 61 '='
 	{0x00,0x00,0x7E,0x00,0x7E,0x00,0x00,0x00},
-	// 62 '>'
 	{0x30,0x18,0x0C,0x06,0x0C,0x18,0x30,0x00},
-	// 63 '?'
 	{0x3C,0x66,0x06,0x0C,0x18,0x00,0x18,0x00},
-	// 64 '@'
 	{0x3C,0x66,0x6E,0x6E,0x60,0x66,0x3C,0x00},
-	// 65 'A'
 	{0x18,0x3C,0x66,0x66,0x7E,0x66,0x66,0x00},
-	// 66 'B'
 	{0x7C,0x66,0x66,0x7C,0x66,0x66,0x7C,0x00},
-	// 67 'C'
 	{0x3C,0x66,0x60,0x60,0x60,0x66,0x3C,0x00},
-	// 68 'D'
 	{0x78,0x6C,0x66,0x66,0x66,0x6C,0x78,0x00},
-	// 69 'E'
 	{0x7E,0x60,0x60,0x7C,0x60,0x60,0x7E,0x00},
-	// 70 'F'
 	{0x7E,0x60,0x60,0x7C,0x60,0x60,0x60,0x00},
-	// 71 'G'
 	{0x3C,0x66,0x60,0x6E,0x66,0x66,0x3E,0x00},
-	// 72 'H'
 	{0x66,0x66,0x66,0x7E,0x66,0x66,0x66,0x00},
-	// 73 'I'
 	{0x7E,0x18,0x18,0x18,0x18,0x18,0x7E,0x00},
-	// 74 'J'
 	{0x3E,0x0C,0x0C,0x0C,0x0C,0x6C,0x38,0x00},
-	// 75 'K'
 	{0x66,0x6C,0x78,0x70,0x78,0x6C,0x66,0x00},
-	// 76 'L'
 	{0x60,0x60,0x60,0x60,0x60,0x60,0x7E,0x00},
-	// 77 'M'
 	{0xC6,0xEE,0xFE,0xD6,0xC6,0xC6,0xC6,0x00},
-	// 78 'N'
 	{0x66,0x76,0x7E,0x7E,0x6E,0x66,0x66,0x00},
-	// 79 'O'
 	{0x3C,0x66,0x66,0x66,0x66,0x66,0x3C,0x00},
-	// 80 'P'
 	{0x7C,0x66,0x66,0x7C,0x60,0x60,0x60,0x00},
-	// 81 'Q'
 	{0x3C,0x66,0x66,0x66,0x6A,0x6C,0x36,0x00},
-	// 82 'R'
 	{0x7C,0x66,0x66,0x7C,0x6C,0x66,0x66,0x00},
-	// 83 'S'
 	{0x3C,0x66,0x70,0x3C,0x0E,0x66,0x3C,0x00},
-	// 84 'T'
 	{0x7E,0x18,0x18,0x18,0x18,0x18,0x18,0x00},
-	// 85 'U'
 	{0x66,0x66,0x66,0x66,0x66,0x66,0x3C,0x00},
-	// 86 'V'
 	{0x66,0x66,0x66,0x66,0x66,0x3C,0x18,0x00},
-	// 87 'W'
 	{0xC6,0xC6,0xC6,0xD6,0xFE,0xEE,0xC6,0x00},
-	// 88 'X'
 	{0x66,0x66,0x3C,0x18,0x3C,0x66,0x66,0x00},
-	// 89 'Y'
 	{0x66,0x66,0x66,0x3C,0x18,0x18,0x18,0x00},
-	// 90 'Z'
 	{0x7E,0x06,0x0C,0x18,0x30,0x60,0x7E,0x00},
 };
 
@@ -144,9 +82,6 @@ static char toFontChar(char c)
 	if(c >= 32 && c <= 90)   return c;
 	return ' ';
 }
-
-
-// ─── Constructor / Destructor ────────────────────────────────────────────────
 
 MainMenu::MainMenu()
 	: menuTexId(0), whiteTexId(0), fontTexId(0),
@@ -199,7 +134,6 @@ static SpriteRect findContiguousBlock(const unsigned char *data, int W, int H,
 		}
 		else if(startY != -1)
 		{
-			// Reached empty background row under the illustration
 			break;
 		}
 	}
@@ -271,7 +205,6 @@ static SpriteRect findSpriteBetweenBlankLines(const unsigned char *data, int W, 
 		}
 		else if(startY != -1)
 		{
-			// Reached pure background row under the sprite
 			break;
 		}
 	}
@@ -292,14 +225,10 @@ MainMenu::~MainMenu()
 	texProgram.free();
 }
 
-
-// ─── Initialization ──────────────────────────────────────────────────────────
-
 void MainMenu::init()
 {
 	initShaders();
 
-	// 1×1 white texture for solid-colour quads
 	unsigned char white[4] = {255, 255, 255, 255};
 	glGenTextures(1, &whiteTexId);
 	glBindTexture(GL_TEXTURE_2D, whiteTexId);
@@ -307,7 +236,6 @@ void MainMenu::init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, white);
 
-	// VAO / VBO (6 vertices × 4 floats = one dynamic quad)
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glGenBuffers(1, &vbo);
@@ -320,7 +248,6 @@ void MainMenu::init()
 	glEnableVertexAttribArray(texLoc);
 	glBindVertexArray(0);
 
-	// Build font texture atlas: 59 glyphs × 8px = 472 × 8 RGBA
 	const int GLYPH_COUNT = 59;
 	const int AW = GLYPH_COUNT * 8;
 	const int AH = 8;
@@ -351,7 +278,6 @@ void MainMenu::init()
 
 	loadSpriteSheet();
 
-	// Background stars / dots
 	srand((unsigned)time(NULL));
 	dots.clear();
 	for(int i = 0; i < 35; i++)
@@ -422,15 +348,12 @@ void MainMenu::loadSpriteSheet()
 
 	int kr = data[0], kg = data[1], kb = data[2];
 
-	// Detect sprite boundaries from un-cleared sprite sheet:
-	// - logoRect: captures POCKET BOMBERMAN and (C) HUDSON SOFT, stopping before purple box (y=196)
 	logoRect = findBounds(data, sheetW, sheetH, 10, 95, 175, 196, kr, kg, kb);
 	treeRect = findContiguousBlock(data, sheetW, sheetH, 730, 15, 920, 175, kr, kg, kb);
 	hudsonRect = findBounds(data, sheetW, sheetH, 10, 460, 175, 610, kr, kg, kb);
 	gameOverRect = findBounds(data, sheetW, sheetH, 5, 5, 195, 92, kr, kg, kb);
 	fallenBombermanRect = findSpriteBetweenBlankLines(data, sheetW, sheetH, 540, 408, 645, 472, kr, kg, kb);
 
-	// Chroma-key: remove the green background.
 	int total = sheetW * sheetH;
 	for(int i = 0; i < total; i++)
 	{
@@ -449,9 +372,6 @@ void MainMenu::loadSpriteSheet()
 
 	stbi_image_free(data);
 }
-
-
-// ─── Update ──────────────────────────────────────────────────────────────────
 
 void MainMenu::startGameOver()
 {
@@ -476,9 +396,6 @@ void MainMenu::update(int deltaTime)
 		}
 	}
 }
-
-
-// ─── Input ───────────────────────────────────────────────────────────────────
 
 MenuAction MainMenu::handleKey(int key)
 {
@@ -507,9 +424,6 @@ MenuAction MainMenu::handleKey(int key)
 	}
 	return MENU_NONE;
 }
-
-
-// ─── Low-level drawing ──────────────────────────────────────────────────────
 
 void MainMenu::renderQuad(float x, float y, float w, float h,
                            float u0, float v0, float u1, float v1)
@@ -551,9 +465,6 @@ void MainMenu::renderRegion(int srcX, int srcY, int srcW, int srcH,
 	renderQuad(dstX, dstY, dstW, dstH, u0, v0, u1, v1);
 }
 
-
-// ─── Font rendering ─────────────────────────────────────────────────────────
-
 void MainMenu::renderChar(char c, float x, float y, float scale, const glm::vec4 &col)
 {
 	char fc = toFontChar(c);
@@ -575,7 +486,6 @@ void MainMenu::renderString(const std::string &s, float x, float y,
 	float cx = x;
 	for(size_t i = 0; i < s.size(); i++)
 	{
-		// Drop shadow
 		renderChar(s[i], cx + scale, y + scale, scale, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
 		renderChar(s[i], cx, y, scale, col);
 		cx += spacing;
@@ -595,14 +505,10 @@ void MainMenu::renderStringCentered(const std::string &s, float cx, float y,
 	renderString(s, cx - w * 0.5f, y, scale, spacing, col);
 }
 
-
-// ─── Main render dispatch ───────────────────────────────────────────────────
-
 void MainMenu::render(GameState screenState)
 {
 	texProgram.use();
 
-	// Fixed 240×160 orthographic projection
 	glm::mat4 proj = glm::ortho(0.0f, 240.0f, 160.0f, 0.0f);
 	texProgram.setUniformMatrix4f("projection", proj);
 	glm::mat4 mv = glm::mat4(1.0f);
@@ -612,10 +518,8 @@ void MainMenu::render(GameState screenState)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Deep arcade dark navy background
 	renderSolidQuad(0, 0, 240, 160, glm::vec4(0.03f, 0.04f, 0.10f, 1.0f));
 
-	// Twinkling stars
 	for(size_t i = 0; i < dots.size(); i++)
 	{
 		float a = 0.25f + 0.25f * std::sin(dots[i].phase + float(animTimer) * 0.005f);
@@ -634,12 +538,8 @@ void MainMenu::render(GameState screenState)
 	glDisable(GL_BLEND);
 }
 
-
-// ─── Menu screen ────────────────────────────────────────────────────────────
-
 void MainMenu::drawMenuScreen()
 {
-	// ── 1. Logo "POCKET BOMBERMAN" ──
 	if(logoRect.w > 0 && logoRect.h > 0)
 	{
 		float scaleX = 170.0f / float(logoRect.w);
@@ -652,28 +552,23 @@ void MainMenu::drawMenuScreen()
 		renderRegion(logoRect.x, logoRect.y, logoRect.w, logoRect.h, dx, dy, dw, dh);
 	}
 
-	// ── 2. Right-side Card: Iconic Tree Scene with Bomberman sleeping ──
 	const float cardX = 138.0f, cardY = 56.0f;
 	const float cardW = 90.0f, cardH = 76.0f;
 	{
-		// Card background
 		renderSolidQuad(cardX, cardY, cardW, cardH, glm::vec4(0.04f, 0.06f, 0.15f, 0.95f));
 
-		// Tree scene inside the card (perfectly fitted, no PAUSE, no gaps)
 		if(treeRect.w > 0 && treeRect.h > 0)
 		{
 			renderRegion(treeRect.x, treeRect.y, treeRect.w, treeRect.h,
 			             cardX + 3.0f, cardY + 3.0f, cardW - 6.0f, cardH - 6.0f);
 		}
 
-		// Gold outer border
 		glm::vec4 gold(0.85f, 0.68f, 0.18f, 1.0f);
 		renderSolidQuad(cardX, cardY, cardW, 1, gold);
 		renderSolidQuad(cardX, cardY + cardH - 1, cardW, 1, gold);
 		renderSolidQuad(cardX, cardY, 1, cardH, gold);
 		renderSolidQuad(cardX + cardW - 1, cardY, 1, cardH, gold);
 
-		// Inner highlight frame
 		glm::vec4 hl(0.25f, 0.40f, 0.70f, 0.45f);
 		renderSolidQuad(cardX + 2, cardY + 2, cardW - 4, 1, hl);
 		renderSolidQuad(cardX + 2, cardY + cardH - 3, cardW - 4, 1, hl);
@@ -681,28 +576,23 @@ void MainMenu::drawMenuScreen()
 		renderSolidQuad(cardX + cardW - 3, cardY + 2, 1, cardH - 4, hl);
 	}
 
-	// ── 3. Left-side Menu Box ──
 	const float boxX = 12.0f, boxY = 56.0f;
 	const float boxW = 120.0f, boxH = 76.0f;
 
-	// Dark semi-transparent fill
 	renderSolidQuad(boxX, boxY, boxW, boxH, glm::vec4(0.05f, 0.07f, 0.18f, 0.92f));
 
-	// Gold outer frame
 	glm::vec4 gold(0.85f, 0.68f, 0.18f, 1.0f);
 	renderSolidQuad(boxX, boxY, boxW, 1, gold);
 	renderSolidQuad(boxX, boxY + boxH - 1, boxW, 1, gold);
 	renderSolidQuad(boxX, boxY, 1, boxH, gold);
 	renderSolidQuad(boxX + boxW - 1, boxY, 1, boxH, gold);
 
-	// Inner highlight line
 	glm::vec4 hl(0.25f, 0.40f, 0.70f, 0.45f);
 	renderSolidQuad(boxX + 2, boxY + 2, boxW - 4, 1, hl);
 	renderSolidQuad(boxX + 2, boxY + boxH - 3, boxW - 4, 1, hl);
 	renderSolidQuad(boxX + 2, boxY + 2, 1, boxH - 4, hl);
 	renderSolidQuad(boxX + boxW - 3, boxY + 2, 1, boxH - 4, hl);
 
-	// ── 4. Option Labels ──
 	const std::string playLabel = bGameInProgress ? "CONTINUAR" : "JUGAR";
 	const std::string labels[4] = { playLabel, "INSTRUCCIONS", "CREDITS", "SORTIR" };
 	float pulse = 0.82f + 0.18f * std::sin(float(animTimer) * 0.008f);
@@ -717,21 +607,16 @@ void MainMenu::drawMenuScreen()
 
 		if(sel)
 		{
-			// Pulsing cursor arrow
 			renderString(">", boxX + 6.0f, oy, 1.0f, 7.0f, glm::vec4(1.0f, 0.35f, 0.20f, pulse));
 		}
 
 		renderString(labels[i], boxX + 16.0f, oy, 0.95f, 6.2f, col);
 	}
 
-	// ── 5. Bottom Prompt (replaces unwanted purple box) ──
 	float blink = 0.5f + 0.5f * std::sin(float(animTimer) * 0.006f);
 	renderStringCentered("PREM ENTER PER SELECCIONAR", 120.0f, 144.0f,
 	                     0.82f, 5.0f, glm::vec4(0.5f * blink + 0.4f, 0.6f * blink + 0.4f, 0.85f * blink + 0.15f, 1.0f));
 }
-
-
-// ─── Instructions screen ───────────────────────────────────────────────────
 
 void MainMenu::drawInstructionsScreen()
 {
@@ -766,9 +651,6 @@ void MainMenu::drawInstructionsScreen()
 	                     0.85f, 5.2f, glm::vec4(blink, blink, blink, 1.0f));
 }
 
-
-// ─── Credits screen ─────────────────────────────────────────────────────────
-
 void MainMenu::drawCreditsScreen()
 {
 	renderStringCentered("CREDITS", 120, 8, 1.1f, 9.0f,
@@ -797,7 +679,6 @@ void MainMenu::drawCreditsScreen()
 	renderStringCentered("1998 HUDSON SOFT",      120, y, 0.80f, 4.8f, grey); y += 8;
 	renderStringCentered("SPRITES: FRET & WOPPET",120, y, 0.80f, 4.8f, grey);
 
-	// Hudson bee logo badge
 	if(hudsonRect.w > 0 && hudsonRect.h > 0)
 	{
 		renderRegion(hudsonRect.x, hudsonRect.y, hudsonRect.w, hudsonRect.h, 184.0f, 84.0f, 34.0f, 34.0f);
@@ -808,22 +689,16 @@ void MainMenu::drawCreditsScreen()
 	                     0.85f, 5.2f, glm::vec4(blink, blink, blink, 1.0f));
 }
 
-
-// ─── Game Over screen ────────────────────────────────────────────────────────
-
 void MainMenu::drawGameOverScreen()
 {
-	// Deep dramatic vignette background
 	renderSolidQuad(0, 0, 240, 160, glm::vec4(0.06f, 0.02f, 0.04f, 1.0f));
 
-	// Drifting ember particles (subtle red/orange sparks)
 	for(size_t i = 0; i < dots.size(); i++)
 	{
 		float a = 0.35f + 0.35f * std::sin(dots[i].phase + float(animTimer) * 0.007f);
 		renderSolidQuad(dots[i].x, dots[i].y, 1.5f, 1.5f, glm::vec4(1.0f, 0.28f, 0.15f, a));
 	}
 
-	// 1. 3D curved "GAME OVER" banner from sprite sheet
 	float goW = float(gameOverRect.w);
 	float goH = float(gameOverRect.h);
 	if(goW <= 0 || goH <= 0) { goW = 150.0f; goH = 65.0f; }
@@ -835,7 +710,6 @@ void MainMenu::drawGameOverScreen()
 
 	renderRegion(gameOverRect.x, gameOverRect.y, gameOverRect.w, gameOverRect.h, dx, dy, dw, dh);
 
-	// 2. Fallen Bomberman with swirl eyes
 	float fbW = float(fallenBombermanRect.w);
 	float fbH = float(fallenBombermanRect.h);
 	if(fbW <= 0 || fbH <= 0) { fbW = 50.0f; fbH = 30.0f; }
@@ -845,11 +719,9 @@ void MainMenu::drawGameOverScreen()
 	float fdx = (240.0f - fdw) * 0.5f;
 	float fdy = dy + dh + 6.0f;
 
-	// Ground shadow
 	renderSolidQuad(fdx + 5.0f, fdy + fdh - 1.0f, fdw - 10.0f, 2.5f, glm::vec4(0.0f, 0.0f, 0.0f, 0.45f));
 	renderRegion(fallenBombermanRect.x, fallenBombermanRect.y, fallenBombermanRect.w, fallenBombermanRect.h, fdx, fdy, fdw, fdh);
 
-	// 3. Subtitles and prompts
 	renderStringCentered("FI DE LA PARTIDA", 120.0f, fdy + fdh + 8.0f,
 	                     0.95f, 6.0f, glm::vec4(1.0f, 0.40f, 0.30f, 1.0f));
 

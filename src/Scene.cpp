@@ -10,7 +10,6 @@
 #include "AudioManager.h"
 #include "Game.h"
 
-
 #define SCREEN_X 0
 #define SCREEN_Y 0
 
@@ -25,7 +24,6 @@
 
 #define GOD_MODE_OFF_GRACE_MS 1500
 #define GOD_MODE_OFF_REFILL_SECONDS 30
-
 
 Scene::Scene()
 {
@@ -51,9 +49,9 @@ Scene::Scene()
 	currentLevel = 1;
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
-	levelTimeRemaining = 215; // 3:35 com al joc original
+	levelTimeRemaining = 215;
 	levelTimerMs = 0;
-	playerLives = 2;          // 2 vides com a la captura de pantalla
+	playerLives = 2;
 	cameraX = 0.f;
 	cameraY = 0.f;
 	cameraWidth = CAMERA_WIDTH;
@@ -89,7 +87,6 @@ Scene::~Scene()
 	powerUps.clear();
 }
 
-
 void Scene::init()
 {
 	if(!bResourcesLoaded)
@@ -121,14 +118,12 @@ void Scene::loadResources()
 {
 	initShaders();
 
-	// Carregar textura de la bomba (bomba.png)
 	spritesheetBomb.loadFromFile(assetPath("images/bomba.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetBomb.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetBomb.setMinFilter(GL_NEAREST);
 	spritesheetBomb.setMagFilter(GL_NEAREST);
 
-	// Carregar textura dels power-ups (power-ups.png)
 	spritesheetPowerUps.loadFromFile(assetPath("images/power-ups.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetPowerUps.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetPowerUps.setWrapT(GL_CLAMP_TO_EDGE);
@@ -162,7 +157,6 @@ void Scene::loadLevel(int levelNumber)
 	levelTimeRemaining = 215;
 	levelTimerMs = 0;
 
-	// Netejar entitats del nivell anterior
 	for(unsigned int i = 0; i < powerUps.size(); i++)
 	{
 		if(powerUps[i] != NULL)
@@ -321,14 +315,12 @@ void Scene::addEnemyOfType(const std::string &type, int tileX, int tileY)
 
 void Scene::spawnPowerUp(int tileX, int tileY)
 {
-	// Evitar generar un power-up si ja n'hi ha un a la mateixa casella
 	for(unsigned int i = 0; i < powerUps.size(); i++)
 	{
 		if(powerUps[i] != NULL && powerUps[i]->getTileCoords() == glm::ivec2(tileX, tileY))
 			return;
 	}
 
-	// Ciclar ordenadament pels 4 tipus de power-up (Bomb Up, Heart, Fire Up, Speed Up)
 	static int nextType = 0;
 	PowerUpType type = (PowerUpType)(nextType % 4);
 	nextType++;
@@ -364,7 +356,6 @@ void Scene::update(int deltaTime)
 	if(pendingLevel != 0)
 		return;
 
-	// Tecles de trampa '1'..'4': anar directament als nivells corresponents
 	if(Game::instance().getKey(GLFW_KEY_1))
 	{
 		if(!bNumKeyPressed) { bNumKeyPressed = true; pendingLevel = 1; return; }
@@ -390,7 +381,6 @@ void Scene::update(int deltaTime)
 		bNumKeyPressed = false;
 	}
 
-	// Tecla de trampa 'K': matar tots els enemics i obrir la porta
 	if(Game::instance().getKey(GLFW_KEY_K))
 	{
 		if(!bKKeyPressed)
@@ -425,8 +415,6 @@ void Scene::update(int deltaTime)
 		bGKeyPressed = false;
 	}
 
-
-	// Plantar bomba en prémer la lletra 'a'
 	if(Game::instance().getKey(GLFW_KEY_A))
 	{
 		if(!bBombKeyPressed && player != NULL && !player->isDying())
@@ -442,7 +430,6 @@ void Scene::update(int deltaTime)
 
 	currentTime += deltaTime;
 
-	// Compte enrere del temporitzador de la barra inferior
 	bool bClockRunning = !bLevelCleared && player != NULL && !player->isDying();
 	if(levelTimeRemaining > 0 && bClockRunning)
 	{
@@ -492,7 +479,6 @@ void Scene::update(int deltaTime)
 		}
 	}
 
-	// Comprovar quants enemics vius queden al nivell
 	int aliveEnemies = 0;
 	for(unsigned int i = 0; i < enemies.size(); i++)
 	{
@@ -500,7 +486,6 @@ void Scene::update(int deltaTime)
 			aliveEnemies++;
 	}
 
-	// Quan no queda cap enemic viu, desbloquejar la sortida
 	if(aliveEnemies == 0 && !bDoorOpen)
 	{
 		AudioManager::instance().playSound(SFX_DOOR_OPEN);
@@ -508,7 +493,6 @@ void Scene::update(int deltaTime)
 		bDoorOpen = true;
 	}
 
-	// Comprovar si el jugador està davant de la porta
 	bool bPlayerAtDoor = false;
 	if(map != NULL && map->hasDoor() && player != NULL && !player->isDying())
 	{
@@ -527,8 +511,6 @@ void Scene::update(int deltaTime)
 		}
 	}
 
-	// Quan la sortida està desbloquejada i el jugador es posa davant de la porta:
-	// Es mostra la imatge de player_death (animació porta) i es passa al següent nivell
 	if(bDoorOpen && bPlayerAtDoor && !bLevelCleared && player != NULL && !player->isDying())
 	{
 		bExitUnlocked = false;
@@ -550,7 +532,6 @@ void Scene::update(int deltaTime)
 		}
 	}
 
-	// Actualitzar power-ups i comprovar recollida per part del jugador
 	if(player != NULL && !player->isDying())
 	{
 		glm::vec2 pPos = player->getPosition();
@@ -580,7 +561,6 @@ void Scene::update(int deltaTime)
 		}
 	}
 
-	// Actualitzar bombes
 	for(int b = int(bombs.size()) - 1; b >= 0; b--)
 	{
 		if(bombs[b] != NULL)
@@ -607,7 +587,6 @@ void Scene::handlePlayerDeath(bool byBomb)
 	player->die(byBomb);
 	AudioManager::instance().playMusic(JINGLE_MISS);
 
-	// En morir, es perden els power-ups temporals com al joc original
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
 
@@ -653,17 +632,15 @@ void Scene::checkCollisions()
 		glm::vec2 ePos = glm::vec2(enemies[i]->getPosition());
 		glm::vec2 eSize = glm::vec2(enemies[i]->getSize());
 
-		// Detecció de col·lisió AABB 2D (Diapositiva 27 de Física per a videojocs)
 		bool collisionX = (pPos.x < ePos.x + eSize.x) && (pPos.x + pSize.x > ePos.x);
 		bool collisionY = (pPos.y < ePos.y + eSize.y) && (pPos.y + pSize.y > ePos.y);
 
 		if((collisionX && collisionY) || enemies[i]->hitsPlayer(pPos, pSize))
 		{
-			// Si el personatge té l'escut del cor, el consumeix i sobreviu (sense matar l'enemic)
 			if(player->hasHeart())
 			{
 				player->consumeHeart();
-				player->setInvulnerable(1500); // 1.5s d'invulnerabilitat temporal per escapar de l'enemic
+				player->setInvulnerable(1500);
 			}
 			else
 			{
@@ -679,16 +656,13 @@ void Scene::dropBomb()
 	if(player == NULL || map == NULL)
 		return;
 
-	// Respectar el límit de bombes simultànies (augmentat pel power-up Bomb Up)
 	if(int(bombs.size()) >= maxSimultaneousBombs)
 		return;
 
-	// Posició del jugador alineada al bloc més proper de 16x16
 	glm::vec2 pPos = player->getPosition();
 	int tileX = int((pPos.x + 8.f) / map->getTileSize());
 	int tileY = int((pPos.y + 8.f) / map->getTileSize());
 
-	// Evitar plantar dues bombes a la mateixa casella
 	for(unsigned int i = 0; i < bombs.size(); i++)
 	{
 		if(bombs[i]->getTileCoords() == glm::ivec2(tileX, tileY))
@@ -762,7 +736,6 @@ void Scene::checkBombCollisions()
 				glm::vec2 tPos = glm::vec2(explTiles[t]);
 				glm::vec2 tSize(16.f, 16.f);
 
-				// 1. Detecció de col·lisió de l'explosió amb el jugador
 				if(player != NULL && !player->isDying())
 				{
 					glm::vec2 pPos = player->getPosition();
@@ -772,7 +745,6 @@ void Scene::checkBombCollisions()
 					{
 						if(player->isInvulnerable() || bGodMode)
 						{
-							// Invulnerable temporalment
 						}
 						else if(player->hasHeart())
 						{
@@ -786,7 +758,6 @@ void Scene::checkBombCollisions()
 					}
 				}
 
-				// 2. Matar els enemics que toquin l'explosió amb la seva animació de mort
 				for(unsigned int e = 0; e < enemies.size(); e++)
 				{
 					if(enemies[e] == NULL || enemies[e]->isDying() || enemies[e]->isDead())
@@ -801,21 +772,18 @@ void Scene::checkBombCollisions()
 				}
 			}
 
-			// Destrucció d'arbustos/roques i aparició de power-ups amb l'ona expansiva
 			if(map != NULL)
 			{
 				glm::ivec2 bombTile = bombs[b]->getTileCoords();
 
-				// Destruir arbust o roca a la casella central de la bomba si n'hi ha
 				if(map->isBush(bombTile.x, bombTile.y))
 				{
 					map->destroyBush(bombTile.x, bombTile.y);
-					if((rand() % 100) < 40) // No sempre surt un power-up (40% de probabilitat)
+					if((rand() % 100) < 40)
 						spawnPowerUp(bombTile.x, bombTile.y);
 				}
 				map->triggerBarrier(bombTile.x, bombTile.y);
 
-				// 4 direccions amb abast bombFlameRadius
 				const glm::ivec2 directions[4] = { glm::ivec2(-1, 0), glm::ivec2(1, 0), glm::ivec2(0, -1), glm::ivec2(0, 1) };
 				for(int d = 0; d < 4; d++)
 				{
@@ -827,14 +795,14 @@ void Scene::checkBombCollisions()
 						if(map->isBush(tx, ty))
 						{
 							map->destroyBush(tx, ty);
-							if((rand() % 100) < 40) // No sempre surt un power-up
+							if((rand() % 100) < 40)
 								spawnPowerUp(tx, ty);
-							break; // L'objecte absorbeix l'explosió
+							break;
 						}
 						else if(map->isGround(tx, ty))
 						{
 							map->triggerBarrier(tx, ty);
-							break; // Paret sòlida atura el foc
+							break;
 						}
 					}
 				}
@@ -850,7 +818,6 @@ void Scene::updateCamera()
 
 	glm::vec2 playerPos = player->getPosition();
 
-	// Seguir el jugador amb la regla d'1/3 i 2/3 (Diapositiva 36)
 	if((playerPos.x - cameraX) < (cameraWidth / 3.f))
 		cameraX = playerPos.x - cameraWidth / 3.f;
 	if((playerPos.x - cameraX) > (2.f * cameraWidth / 3.f))
@@ -861,7 +828,6 @@ void Scene::updateCamera()
 	if((playerPos.y - cameraY) > (2.f * cameraHeight / 3.f))
 		cameraY = playerPos.y - 2.f * cameraHeight / 3.f;
 
-	// Limitar la càmera als marges del mapa (Diapositiva 26)
 	float mapPixelWidth = float(map->getMapWidth() * map->getTileSize());
 	float mapPixelHeight = float(map->getMapHeight() * map->getTileSize());
 	float maxCameraX = mapPixelWidth - cameraWidth;
@@ -877,7 +843,6 @@ void Scene::updateCamera()
 	else
 		cameraY = maxCameraY / 2.f;
 
-	// Actualitzar la matriu de projecció ortogràfica (Diapositiva 30)
 	projection = glm::ortho(cameraX, cameraX + cameraWidth, cameraY + cameraHeight, cameraY);
 }
 
@@ -930,7 +895,6 @@ void Scene::render()
 	bool bHasHeart = (player != NULL && player->hasHeart());
 	hud.render(levelTimeRemaining, playerLives, aliveEnemies, maxSimultaneousBombs, bombFlameRadius, bHasHeart, bShowExit, currentTime, bGodMode);
 
-	// Restaurar la matriu de projecció ortogràfica de la càmera
 	texProgram.setUniformMatrix4f("projection", projection);
 }
 

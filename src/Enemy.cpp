@@ -36,35 +36,30 @@ void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	spritesheet.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheet.setMinFilter(GL_NEAREST);
 	spritesheet.setMagFilter(GL_NEAREST);
-	
+
 	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 253.f;
 	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 632.f;
 
-	// Cada sprite individual d'e_basic.png és de 16x16 píxels, representat en un quad de 16x16
-	// per mantenir l'escala 1:1 dels blocs del mapa i del personatge (Player).
 	glm::vec2 sizeInSpritesheet(16.f / texW, 16.f / texH);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSpritesheet, &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(3);
-	
-	// Animació cap a l'esquerra (fotogrames 0 i 1)
+
 	sprite->setAnimationSpeed(MOVE_LEFT, 5);
 	sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(MOVE_LEFT, glm::vec2(1.f * 16.f / texW, 0.f));
-	
-	// Animació cap a la dreta (fotogrames 2 i 3)
+
 	sprite->setAnimationSpeed(MOVE_RIGHT, 5);
 	sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(MOVE_RIGHT, glm::vec2(1.f * 16.f / texW, 0.f));
 
-	// Animació de mort (fotogrames 4, 5 i 6)
 	sprite->setAnimationSpeed(DIE, 6);
 	sprite->addKeyframe(DIE, glm::vec2(4.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(DIE, glm::vec2(5.f * 16.f / texW, 0.f));
 	sprite->addKeyframe(DIE, glm::vec2(6.f * 16.f / texW, 0.f));
-	
+
 	direction = MOVE_DIR_RIGHT;
 	sprite->changeAnimation(MOVE_RIGHT);
-	
+
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
 }
@@ -83,13 +78,11 @@ void Enemy::update(int deltaTime)
 		return;
 	}
 
-	// Gravetat: cau fins a tocar el terra
 	posEnemy.y += FALL_STEP;
 	bool onGround = (map != NULL) && map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
 
 	if(onGround && map != NULL)
 	{
-		// Moviment més lent: 1 píxel cada 26 ms (~38 px/segon)
 		int steps = moveStep(deltaTime, ENEMY_PATROL_SPEED);
 
 		while(steps-- > 0)
@@ -97,7 +90,7 @@ void Enemy::update(int deltaTime)
 			if(direction == MOVE_DIR_RIGHT)
 			{
 				posEnemy.x += 1;
-				
+
 				bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
 				int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
 				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
@@ -120,7 +113,7 @@ void Enemy::update(int deltaTime)
 			else if(direction == MOVE_DIR_LEFT)
 			{
 				posEnemy.x -= 1;
-				
+
 				bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
 				int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
 				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
