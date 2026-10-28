@@ -24,6 +24,10 @@
 
 #define GOD_MODE_OFF_GRACE_MS 1500
 #define GOD_MODE_OFF_REFILL_SECONDS 30
+#define BUSH_FADE_DURATION_MS 400
+#define LEVEL_CLEAR_DELAY_MS 2200
+#define LEVEL_RESTART_DELAY_MS 2000
+#define POWERUP_SPAWN_CHANCE_PERCENT 70
 
 Scene::Scene()
 {
@@ -40,6 +44,7 @@ Scene::Scene()
 	bGodMode = false;
 	bLevelCleared = false;
 	levelClearTimer = 0;
+	restartLevelTimer = 0;
 	bExitUnlocked = false;
 	bGameOver = false;
 	bGameWon = false;
@@ -110,6 +115,9 @@ void Scene::init()
 	playerLives = 2;
 	maxSimultaneousBombs = 1;
 	bombFlameRadius = 1;
+
+	if(player != NULL)
+		player->reset();
 
 	loadLevel(1);
 }
@@ -204,6 +212,7 @@ void Scene::loadLevel(int levelNumber)
 
 	bLevelCleared = false;
 	levelClearTimer = 0;
+	restartLevelTimer = 0;
 	bExitUnlocked = false;
 	bDoorOpen = false;
 	if(map->hasDoor())
@@ -237,6 +246,11 @@ void Scene::nextLevel()
 	if(currentLevel >= 5)
 	{
 		bGameWon = true;
+		maxSimultaneousBombs = 1;
+		bombFlameRadius = 1;
+		playerLives = 2;
+		if(player != NULL)
+			player->reset();
 		return;
 	}
 	pendingLevel = currentLevel + 1;
@@ -321,9 +335,32 @@ void Scene::spawnPowerUp(int tileX, int tileY)
 			return;
 	}
 
+	bool bHeartPresent = (player != NULL && player->hasHeart());
+	if(!bHeartPresent)
+	{
+		for(unsigned int i = 0; i < powerUps.size(); i++)
+		{
+			if(powerUps[i] != NULL && powerUps[i]->getType() == POWERUP_HEART)
+			{
+				bHeartPresent = true;
+				break;
+			}
+		}
+	}
+
 	static int nextType = 0;
-	PowerUpType type = (PowerUpType)(nextType % 4);
-	nextType++;
+	PowerUpType type;
+	if(bHeartPresent)
+	{
+		const PowerUpType nonHeartPool[3] = { POWERUP_BOMB_UP, POWERUP_FIRE_UP, POWERUP_SPEED_UP };
+		type = nonHeartPool[nextType % 3];
+		nextType++;
+	}
+	else
+	{
+		type = (PowerUpType)(nextType % 4);
+		nextType++;
+	}
 
 	PowerUp *newPowerUp = new PowerUp(type, glm::ivec2(tileX, tileY), &spritesheetPowerUps, &texProgram);
 	powerUps.push_back(newPowerUp);
@@ -454,16 +491,33 @@ void Scene::update(int deltaTime)
 	if(player != NULL)
 		player->update(deltaTime);
 
-	if(bWaitingGameOver && player != NULL && !player->isDying())
+	if(player != NULL && !player->isDying() && map != NULL)
 	{
-		bWaitingGameOver = false;
-		bGameOver = true;
+		float bottomLimit = float(map->getMapHeight() * map->getTileSize());
+		if(player->getPosition().y >= bottomLimit)
+		{
+			handlePlayerDeath(false);
+		}
 	}
-	else if(bWaitingRestartLevel && player != NULL && !player->isDying())
+
+	if(bWaitingGameOver)
 	{
-		bWaitingRestartLevel = false;
-		pendingLevel = currentLevel;
-		return;
+		restartLevelTimer += deltaTime;
+		if(restartLevelTimer >= LEVEL_RESTART_DELAY_MS)
+		{
+			bWaitingGameOver = false;
+			bGameOver = true;
+		}
+	}
+	else if(bWaitingRestartLevel)
+	{
+		restartLevelTimer += deltaTime;
+		if(restartLevelTimer >= LEVEL_RESTART_DELAY_MS)
+		{
+			bWaitingRestartLevel = false;
+			pendingLevel = currentLevel;
+			return;
+		}
 	}
 
 	for(int i = int(enemies.size()) - 1; i >= 0; i--)
@@ -524,7 +578,7 @@ void Scene::update(int deltaTime)
 	if(bLevelCleared)
 	{
 		levelClearTimer += deltaTime;
-		if(levelClearTimer >= 800)
+		if(levelClearTimer >= LEVEL_CLEAR_DELAY_MS)
 		{
 			bLevelCleared = false;
 			nextLevel();
@@ -594,10 +648,12 @@ void Scene::handlePlayerDeath(bool byBomb)
 	{
 		playerLives--;
 		bWaitingRestartLevel = true;
+		restartLevelTimer = 0;
 	}
 	else
 	{
 		bWaitingGameOver = true;
+		restartLevelTimer = 0;
 	}
 }
 
@@ -778,9 +834,18 @@ void Scene::checkBombCollisions()
 
 				if(map->isBush(bombTile.x, bombTile.y))
 				{
-					map->destroyBush(bombTile.x, bombTile.y);
-					if((rand() % 100) < 40)
-						spawnPowerUp(bombTile.x, bombTile.y);
+					if(!map->isFadingBush(bombTile.x, bombTile.y))
+					{
+						if((rand() % 100) < POWERUP_SPAWN_CHANCE_PERCENT)
+						{
+							map->destroyBush(bombTile.x, bombTile.y);
+							spawnPowerUp(bombTile.x, bombTile.y);
+						}
+						else
+						{
+							map->destroyBushFade(bombTile.x, bombTile.y, BUSH_FADE_DURATION_MS);
+						}
+					}
 				}
 				map->triggerBarrier(bombTile.x, bombTile.y);
 
@@ -794,9 +859,18 @@ void Scene::checkBombCollisions()
 
 						if(map->isBush(tx, ty))
 						{
-							map->destroyBush(tx, ty);
-							if((rand() % 100) < 40)
-								spawnPowerUp(tx, ty);
+							if(!map->isFadingBush(tx, ty))
+							{
+								if((rand() % 100) < POWERUP_SPAWN_CHANCE_PERCENT)
+								{
+									map->destroyBush(tx, ty);
+									spawnPowerUp(tx, ty);
+								}
+								else
+								{
+									map->destroyBushFade(tx, ty, BUSH_FADE_DURATION_MS);
+								}
+							}
 							break;
 						}
 						else if(map->isGround(tx, ty))

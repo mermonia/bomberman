@@ -39,7 +39,7 @@ public:
 	int getCurrentLevel() const { return currentLevel; }
 	bool isGameOver() const { return bGameOver; }
 	bool isGameWon() const { return bGameWon; }
-	void resetGameOver() { bGameOver = false; bWaitingGameOver = false; bWaitingRestartLevel = false; }
+
 
 	void addEnemy(int tileX, int tileY);
 	void addEnemyChaser(int tileX, int tileY);
@@ -81,6 +81,7 @@ private:
 	bool bNumKeyPressed;
 	bool bLevelCleared;
 	int levelClearTimer;
+	int restartLevelTimer;
 	bool bExitUnlocked;
 	bool bGodMode;
 	bool bGameOver;

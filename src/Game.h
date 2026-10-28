@@ -12,9 +12,9 @@
 #define WINDOW_WIDTH 1440
 #define WINDOW_HEIGHT 960
 
-#define FADE_OUT_TIME 200
-#define FADE_IN_TIME 200
-#define FADE_STEPS 4
+#define FADE_OUT_TIME 500
+#define FADE_IN_TIME 500
+#define FADE_STEPS 16
 
 enum TransitionPhase
 {
@@ -72,6 +72,7 @@ private:
 	bool bPendingNewGame;
 	bool bPendingResetScene;
 	bool bPendingGameOver;
+	bool bPendingWin;
 	bool bPendingLevel;
 	ShaderProgram fadeProgram;
 	GLuint fadeVao;

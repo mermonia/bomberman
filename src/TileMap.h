@@ -39,8 +39,18 @@ public:
 	glm::ivec2 getDoorTile() const { return doorTile; }
 	const std::vector<EnemySpawn> &getEnemySpawns() const { return enemySpawns; }
 
+	struct FadingBush
+	{
+		int tileX, tileY;
+		int tileId;
+		int timer;
+		int totalTime;
+	};
+
 	bool isBush(int tileX, int tileY) const;
+	bool isFadingBush(int tileX, int tileY) const;
 	bool destroyBush(int tileX, int tileY);
+	bool destroyBushFade(int tileX, int tileY, int fadeTimeMs = 400);
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
@@ -88,6 +98,8 @@ private:
 	ShaderProgram *renderProgram;
 	int barrierTopTile, barrierBodyTile, barrierBaseTile;
 	std::vector<BarrierCollapse> collapsingBarriers;
+	std::vector<FadingBush> fadingBushes;
+	GLuint fadingVao, fadingVbo;
 
 };
 

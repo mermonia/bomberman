@@ -26,7 +26,7 @@ Player::Player()
 	spriteDeath = NULL;
 	map = NULL;
 	program = NULL;
-	spawnPos = glm::ivec2(0, 0);
+
 	jumpAngle = 0.f;
 	walkRemainder = 0.f;
 	fallRemainder = 0.f;
@@ -133,16 +133,10 @@ void Player::update(int deltaTime)
 
 	if(bDying)
 	{
-		spriteDeath->update(deltaTime);
-		dyingTime += deltaTime;
-		if(dyingTime >= maxDyingTime)
+		if(dyingTime < maxDyingTime)
 		{
-			bDying = false;
-			posPlayer = spawnPos;
-			bJumping = false;
-			sprite->changeAnimation(STAND_RIGHT);
-			sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
-			spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
+			spriteDeath->update(deltaTime);
+			dyingTime += deltaTime;
 		}
 		return;
 	}
@@ -333,12 +327,30 @@ void Player::render()
 	}
 	else
 	{
-		if(invulnerableTime <= 0 || (invulnerableTime / 100) % 2 == 0)
+		if(invulnerableTime <= 0 || (invulnerableTime / 100) % 2 != 0)
 			sprite->render();
 	}
 
 	if(bTinted)
 		program->setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void Player::reset()
+{
+	bDying = false;
+	bEnteringDoor = false;
+	bHasHeart = false;
+	bGodTint = false;
+	invulnerableTime = 0;
+	walkSpeed = WALK_SPEED;
+	bJumping = false;
+	jumpAngle = 0.f;
+	walkRemainder = 0.f;
+	fallRemainder = 0.f;
+	dyingTime = 0;
+	maxDyingTime = 1000;
+	if(sprite != NULL)
+		sprite->changeAnimation(STAND_RIGHT);
 }
 
 void Player::setTileMap(TileMap *tileMap)
@@ -353,7 +365,7 @@ void Player::setPosition(const glm::vec2 &pos)
 	dyingTime = 0;
 	bJumping = false;
 	posPlayer = pos;
-	spawnPos = pos;
+
 	if(sprite != NULL)
 	{
 		sprite->changeAnimation(STAND_RIGHT);
@@ -403,6 +415,8 @@ int Player::walkStep(int deltaTime)
 	walkRemainder += walkSpeed * TILE_SIZE * deltaTime / 1000.f;
 	int step = int(walkRemainder);
 	walkRemainder -= float(step);
+	if(step > TILE_SIZE)
+		step = TILE_SIZE;
 
 	return step;
 }
@@ -412,6 +426,8 @@ int Player::fallStep(int deltaTime)
 	fallRemainder += FALL_SPEED * TILE_SIZE * deltaTime / 1000.f;
 	int step = int(fallRemainder);
 	fallRemainder -= float(step);
+	if(step > TILE_SIZE)
+		step = TILE_SIZE;
 
 	return step;
 }
