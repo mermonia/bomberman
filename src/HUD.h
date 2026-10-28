@@ -47,4 +47,4 @@ private:
 	int texHeight;
 };
 
-#endif // _HUD_INCLUDE
+#endif

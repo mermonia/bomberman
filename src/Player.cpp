@@ -6,7 +6,6 @@
 #include "AudioManager.h"
 #include "Game.h"
 
-
 #define TILE_SIZE 16
 
 #define WALK_SPEED 3.75f
@@ -16,12 +15,10 @@
 
 #define JUMP_RISE (JUMP_HEIGHT_TILES * TILE_SIZE)
 
-
 enum PlayerAnims
 {
 	STAND_LEFT, STAND_RIGHT, MOVE_LEFT, MOVE_RIGHT, JUMP_LEFT, FALL_LEFT, JUMP_RIGHT, FALL_RIGHT
 };
-
 
 Player::Player()
 {
@@ -62,63 +59,55 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	spritesheet.setMagFilter(GL_NEAREST);
 	sprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 1.0f / 3.0f), &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(8);
-	
+
 		sprite->setAnimationSpeed(STAND_LEFT, 8);
 		sprite->addKeyframe(STAND_LEFT, glm::vec2(0.f, 0.f));
-		
+
 		sprite->setAnimationSpeed(STAND_RIGHT, 8);
 		sprite->addKeyframe(STAND_RIGHT, glm::vec2(0.75f, 0.f));
-		
+
 		sprite->setAnimationSpeed(MOVE_LEFT, 8);
 		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 1.f / 3.f));
 		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 0.f));
 		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.75f, 2.f / 3.f));
 		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 0.f));
-		
+
 		sprite->setAnimationSpeed(MOVE_RIGHT, 8);
 		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.50f, 0.f));
 		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.75f, 0.f));
 		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.25f, 0.f));
 		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.75f, 0.f));
-		
+
 		sprite->setAnimationSpeed(JUMP_LEFT, 8);
 		sprite->addKeyframe(JUMP_LEFT, glm::vec2(0.25f, 2.f / 3.f));
 		sprite->setAnimationSpeed(FALL_LEFT, 8);
 		sprite->addKeyframe(FALL_LEFT, glm::vec2(0.f, 2.f / 3.f));
-		
+
 		sprite->setAnimationSpeed(JUMP_RIGHT, 8);
 		sprite->addKeyframe(JUMP_RIGHT, glm::vec2(0.50f, 1.f / 3.f));
 		sprite->setAnimationSpeed(FALL_RIGHT, 8);
 		sprite->addKeyframe(FALL_RIGHT, glm::vec2(0.25f, 1.f / 3.f));
-		
+
 	sprite->changeAnimation(0);
 
-	// Spritesheet de mort (player_death.png - 64x32 px, 4 columnes x 2 files de 16x16)
 	spritesheetDeath.loadFromFile(assetPath("images/player_death.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheetDeath.setWrapS(GL_CLAMP_TO_EDGE);
 	spritesheetDeath.setWrapT(GL_CLAMP_TO_EDGE);
 	spritesheetDeath.setMinFilter(GL_NEAREST);
 	spritesheetDeath.setMagFilter(GL_NEAREST);
 
-	// Cada cel·la és de 16x16 px: 16/64 = 0.25f (X), 16/32 = 0.50f (Y)
 	spriteDeath = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(0.25f, 0.50f), &spritesheetDeath, &shaderProgram);
 	spriteDeath->setNumberAnimations(3);
 
-	// Animació 0: Mort per enemic (els 8 fotogrames d'abans)
-	// Fila 1 (segona fila, y = 0.50f): El personatge es gira i cau d'esquena (4 fotogrames)
-	// Fila 0 (primera fila, y = 0.00f): El personatge queda a terra i s'esvaeix en bombolles d'energia (4 fotogrames)
 	spriteDeath->setAnimationSpeed(0, 8);
-	// Fila 1:
 	spriteDeath->addKeyframe(0, glm::vec2(0.00f, 0.0f));
 	spriteDeath->addKeyframe(0, glm::vec2(0.75f, 0.50f));
 
-	// Animació 1: Mort per bomba (els fotogrames 2, 3 i 4 de la fila 0)
 	spriteDeath->setAnimationSpeed(1, 5);
-	spriteDeath->addKeyframe(1, glm::vec2(0.75f, 0.00f)); // Fotograma 2 (cercle vermell)
-	spriteDeath->addKeyframe(1, glm::vec2(0.50f, 0.00f)); // Fotograma 3 (esclat vermell)
-	spriteDeath->addKeyframe(1, glm::vec2(0.25f, 0.00f)); // Fotograma 4 (dispersió)
+	spriteDeath->addKeyframe(1, glm::vec2(0.75f, 0.00f));
+	spriteDeath->addKeyframe(1, glm::vec2(0.50f, 0.00f));
+	spriteDeath->addKeyframe(1, glm::vec2(0.25f, 0.00f));
 
-	// Animació 2: Entrar a la porta (segona fila, tercera columna de player_death.png: y = 0.50f, x = 0.50f)
 	spriteDeath->setAnimationSpeed(2, 1);
 	spriteDeath->addKeyframe(2, glm::vec2(0.50f, 0.50f));
 
@@ -127,7 +116,7 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 	spriteDeath->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
-	
+
 }
 
 void Player::update(int deltaTime)
@@ -146,7 +135,6 @@ void Player::update(int deltaTime)
 	{
 		spriteDeath->update(deltaTime);
 		dyingTime += deltaTime;
-		// Quan es completa l'animació de mort (maxDyingTime), reapareix al punt d'inici
 		if(dyingTime >= maxDyingTime)
 		{
 			bDying = false;
@@ -255,7 +243,7 @@ void Player::update(int deltaTime)
 				sprite->changeAnimation(STAND_RIGHT);
 		}
 	}
-	
+
 	if(bJumping)
 	{
 		jumpAngle += 180.f * deltaTime / JUMP_TIME;
@@ -328,7 +316,7 @@ void Player::update(int deltaTime)
 				sprite->changeAnimation(FALL_RIGHT);
 		}
 	}
-	
+
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 }
 
@@ -432,7 +420,4 @@ bool Player::collisionDown(int *posY)
 {
 	return map != NULL && map->collisionMoveDown(posPlayer, glm::ivec2(16, 16), posY);
 }
-
-
-
 

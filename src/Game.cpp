@@ -6,7 +6,6 @@
 #include "AssetPath.h"
 #include "AudioManager.h"
 
-
 void Game::init()
 {
 	bPlay = true;
@@ -19,7 +18,6 @@ void Game::init()
 	glClearColor(0.04f, 0.05f, 0.10f, 1.0f);
 
 	mainMenu.init();
-	// scene.init() is deferred until the player presses JUGAR
 
 	initFade();
 

@@ -5,20 +5,16 @@
 #include "TileMap.h"
 #include "AssetPath.h"
 
-
 using namespace std;
 
-
 #define BARRIER_COLLAPSE_STEP 70
-
 
 TileMap *TileMap::createTileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
 {
 	TileMap *map = new TileMap(levelFile, minCoords, program);
-	
+
 	return map;
 }
-
 
 TileMap::TileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
 {
@@ -47,7 +43,6 @@ TileMap::~TileMap()
 		delete [] dynamicSolid;
 	free();
 }
-
 
 void TileMap::update(int deltaTime)
 {
@@ -98,7 +93,7 @@ bool TileMap::loadLevel(const string &levelFile)
 	string line, tilesheetFile;
 	stringstream sstream;
 	char tile;
-	
+
 	fin.open(levelFile.c_str());
 	if(!fin.is_open())
 		return false;
@@ -226,15 +221,14 @@ bool TileMap::loadLevel(const string &levelFile)
 		}
 		else if(tilesheetFile.find("blocks3") != string::npos)
 		{
-			bushTiles.push_back(8); // Nomes les roques al nivell 3
+			bushTiles.push_back(8);
 		}
 		else if(tilesheetFile.find("blocks4") != string::npos)
 		{
-			bushTiles.push_back(1); // Nomes les cares al nivell 4
+			bushTiles.push_back(1);
 		}
 	}
 
-	// Detecció automàtica de la porta del nivell si no s'ha especificat amb la directiva DOOR
 	if(doorTile.x < 0)
 	{
 		int targetDoorId = -1;
@@ -272,7 +266,7 @@ bool TileMap::loadLevel(const string &levelFile)
 		if(doorTile.x >= 0 && doorTile.x < mapSize.x && doorTile.y >= 0 && doorTile.y < mapSize.y)
 			doorTileId = map[doorTile.y * mapSize.x + doorTile.x];
 	}
-	
+
 	return true;
 }
 
@@ -286,7 +280,7 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 	int tile;
 	glm::vec2 posTile, texCoordTile[2];
 	vector<float> vertices;
-	
+
 	nTiles = 0;
 	for(int j=0; j<mapSize.y; j++)
 	{
@@ -295,20 +289,17 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 			tile = map[j * mapSize.x + i];
 			if(tile > 0 || (zeroBased && tile >= 0))
 			{
-				// Non-empty tile
 				nTiles++;
 				posTile = glm::vec2(minCoords.x + i * tileSize, minCoords.y + j * tileSize);
 				int tileIdx = zeroBased ? tile : (tile - 1);
 				texCoordTile[0] = glm::vec2(float(tileIdx % tilesheetSize.x) / tilesheetSize.x, float(tileIdx / tilesheetSize.x) / tilesheetSize.y);
 				texCoordTile[1] = texCoordTile[0] + tileTexSize;
-				// First triangle
 				vertices.push_back(posTile.x); vertices.push_back(posTile.y);
 				vertices.push_back(texCoordTile[0].x); vertices.push_back(texCoordTile[0].y);
 				vertices.push_back(posTile.x + blockSize); vertices.push_back(posTile.y);
 				vertices.push_back(texCoordTile[1].x); vertices.push_back(texCoordTile[0].y);
 				vertices.push_back(posTile.x + blockSize); vertices.push_back(posTile.y + blockSize);
 				vertices.push_back(texCoordTile[1].x); vertices.push_back(texCoordTile[1].y);
-				// Second triangle
 				vertices.push_back(posTile.x); vertices.push_back(posTile.y);
 				vertices.push_back(texCoordTile[0].x); vertices.push_back(texCoordTile[0].y);
 				vertices.push_back(posTile.x + blockSize); vertices.push_back(posTile.y + blockSize);
@@ -328,14 +319,10 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 	texCoordLocation = program.bindVertexAttribute("texCoord", 2, 4*sizeof(float), (void *)(2*sizeof(float)));
 }
 
-// Collision tests for axis aligned bounding boxes.
-// Method collisionMoveDown also corrects Y coordinate if the box is
-// already intersecting a tile below.
-
 bool TileMap::collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const
 {
 	int x, y0, y1;
-	
+
 	x = pos.x / tileSize;
 	y0 = pos.y / tileSize;
 	y1 = (pos.y + size.y - 1) / tileSize;
@@ -349,14 +336,14 @@ bool TileMap::collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) c
 		if(isBlockedTile(x, y))
 			return true;
 	}
-	
+
 	return false;
 }
 
 bool TileMap::collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const
 {
 	int x, y0, y1;
-	
+
 	x = (pos.x + size.x - 1) / tileSize;
 	y0 = pos.y / tileSize;
 	y1 = (pos.y + size.y - 1) / tileSize;
@@ -370,14 +357,14 @@ bool TileMap::collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) 
 		if(isBlockedTile(x, y))
 			return true;
 	}
-	
+
 	return false;
 }
 
 bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const
 {
 	int x0, x1, y;
-	
+
 	x0 = pos.x / tileSize;
 	x1 = (pos.x + size.x - 1) / tileSize;
 	y = (pos.y + size.y - 1) / tileSize;
@@ -396,14 +383,14 @@ bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, i
 			}
 		}
 	}
-	
+
 	return false;
 }
 
 bool TileMap::collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const
 {
 	int x0, x1, y;
-	
+
 	x0 = pos.x / tileSize;
 	x1 = (pos.x + size.x - 1) / tileSize;
 	y = pos.y / tileSize;
@@ -424,7 +411,7 @@ bool TileMap::collisionMoveUp(const glm::ivec2 &pos, const glm::ivec2 &size, int
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -440,7 +427,6 @@ bool TileMap::isBlockedTile(int tileX, int tileY) const
 	if(tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y)
 		return false;
 
-	// La porta no bloqueja el pas per permetre posar-te davant de la porta
 	if(tileX == doorTile.x && tileY == doorTile.y)
 		return false;
 
@@ -512,33 +498,4 @@ void TileMap::triggerBarrier(int tileX, int tileY)
 		collapse.clearY++;
 	collapsingBarriers.push_back(collapse);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

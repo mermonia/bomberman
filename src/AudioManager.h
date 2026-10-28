@@ -1,14 +1,11 @@
 #ifndef _AUDIOMANAGER_INCLUDE
 #define _AUDIOMANAGER_INCLUDE
 
-
 #include <string>
-
 
 #define AUDIO_VOICES 4
 #define AUDIO_MUSIC_VOLUME 0.6f
 #define AUDIO_SOUND_VOLUME 1.0f
-
 
 enum SoundId
 {
@@ -41,12 +38,10 @@ enum MusicId
 	MUSIC_COUNT
 };
 
-
 namespace Audio
 {
 	class Sound;
 }
-
 
 class AudioManager
 {
@@ -89,5 +84,4 @@ private:
 
 };
 
-
-#endif // _AUDIOMANAGER_INCLUDE
+#endif

@@ -1,17 +1,10 @@
 #ifndef _SHADER_PROGRAM_INCLUDE
 #define _SHADER_PROGRAM_INCLUDE
 
-
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 #include "Shader.h"
-
-
-// Using the Shader class ShaderProgram can link a vertex and a fragment shader
-// together, bind input attributes to their corresponding vertex shader names, 
-// and bind the fragment output to a name from the fragment shader
-
 
 class ShaderProgram
 {
@@ -28,7 +21,6 @@ public:
 
 	void use();
 
-	// Pass uniforms to the associated shaders
 	void setUniform2f(const string &uniformName, float v0, float v1);
 	void setUniform3f(const string &uniformName, float v0, float v1, float v2);
 	void setUniform4f(const string &uniformName, float v0, float v1, float v2, float v3);
@@ -44,5 +36,4 @@ private:
 
 };
 
-
-#endif // _SHADER_PROGRAM_INCLUDE
+#endif

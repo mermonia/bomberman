@@ -5,12 +5,10 @@
 #include "Enemy.h"
 #include "Player.h"
 
-
 enum ParachuteState
 {
 	PARACHUTE_WALK, PARACHUTE_AIRBORNE, PARACHUTE_GLIDE
 };
-
 
 class EnemyParachute : public Enemy
 {
@@ -49,5 +47,4 @@ private:
 
 };
 
-
-#endif // _ENEMYPARACHUTE_INCLUDE
+#endif

@@ -54,19 +54,16 @@ public:
 		sprite = Sprite::createSprite(glm::vec2(16, 16), sizeInSpritesheet, &spritesheet, &shaderProgram);
 		sprite->setNumberAnimations(3);
 
-		// Animació de patrulla normal (Fila 0: columnes 0, 1 i 2)
 		sprite->setAnimationSpeed(ENEMY_CHASER_WALK, 5);
 		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(0.f * stepX, 0.f * stepY));
 		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(1.f * stepX, 0.f * stepY));
 		sprite->addKeyframe(ENEMY_CHASER_WALK, glm::vec2(2.f * stepX, 0.f * stepY));
 
-		// Animació de persecució ràpida (Fila 1: columnes 0, 1 i 2)
 		sprite->setAnimationSpeed(ENEMY_CHASER_CHASE, 10);
 		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(0.f * stepX, 1.f * stepY));
 		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(1.f * stepX, 1.f * stepY));
 		sprite->addKeyframe(ENEMY_CHASER_CHASE, glm::vec2(2.f * stepX, 1.f * stepY));
 
-		// Animació de mort (Columna 3: fila 0 i fila 1)
 		sprite->setAnimationSpeed(ENEMY_CHASER_DIE, 4);
 		sprite->addKeyframe(ENEMY_CHASER_DIE, glm::vec2(3.f * stepX, 0.f * stepY));
 		sprite->addKeyframe(ENEMY_CHASER_DIE, glm::vec2(3.f * stepX, 1.f * stepY));
@@ -97,7 +94,6 @@ public:
 		if(chaseCooldown > 0)
 			chaseCooldown -= deltaTime;
 
-		// Detectar si el jugador és dins d'un radi de 3 blocs (3 * 16 = 48 px)
 		int blockSize = (map != NULL) ? map->getTileSize() : 16;
 		float radius = 3.f * float(blockSize);
 
@@ -111,7 +107,6 @@ public:
 
 			if(!bChasing)
 			{
-				// Només s'activa si no està en cooldown, dins del radi de 3 blocs i alçada similar
 				if(chaseCooldown <= 0 && dist <= radius && std::abs(eCenter.y - pCenter.y) <= 24.f)
 				{
 					bChasing = true;
@@ -123,14 +118,10 @@ public:
 			}
 			else
 			{
-				// En persecució:
-				// 1. Si el jugador s'ha allunyat més enllà del radi de 3 blocs, deixa de perseguir
 				if(dist > radius)
 				{
 					bChasing = false;
 				}
-				// 2. Si el jugador ha saltat o esquivat l'enemic i ara és al darrere:
-				// no es gira immediatament, sinó que continua el seu recorregut cap endavant!
 				else if((direction == MOVE_DIR_RIGHT && pPos.x < posEnemy.x - 12.f) ||
 				        (direction == MOVE_DIR_LEFT && pPos.x > posEnemy.x + 12.f))
 				{
@@ -144,20 +135,15 @@ public:
 			bChasing = false;
 		}
 
-		// Canviar animació segons si persegueix o patrulla
 		int targetAnim = bChasing ? ENEMY_CHASER_CHASE : ENEMY_CHASER_WALK;
 		if(sprite->animation() != targetAnim)
 			sprite->changeAnimation(targetAnim);
 
-		// Gravetat
 		posEnemy.y += 4;
 		bool onGround = (map != NULL) && map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
 
 		if(onGround && map != NULL)
 		{
-			// Velocitats:
-			// En persecució va més ràpid (1 píxel cada 12 ms, ~83 px/segon)
-			// En patrulla va més lent (1 píxel cada 26 ms, ~38 px/segon)
 			int steps = moveStep(deltaTime, bChasing ? ENEMY_CHASE_SPEED : ENEMY_PATROL_SPEED);
 
 			while(steps-- > 0)
@@ -177,8 +163,6 @@ public:
 						direction = MOVE_DIR_LEFT;
 						if(bChasing)
 						{
-							// Si topa amb una paret o precipici i no pot matar el jugador,
-							// abandona la persecució i continua el seu recorregut en la direcció contrària
 							bChasing = false;
 							chaseCooldown = 1500;
 						}
@@ -200,8 +184,6 @@ public:
 						direction = MOVE_DIR_RIGHT;
 						if(bChasing)
 						{
-							// Si topa amb una paret o precipici i no pot matar el jugador,
-							// abandona la persecució i continua el seu recorregut en la direcció contrària
 							bChasing = false;
 							chaseCooldown = 1500;
 						}
@@ -211,10 +193,6 @@ public:
 			}
 		}
 
-		// Orientació visual del sprite:
-		// Els fotogrames de patrulla (fila 0 de e_chaser.png) miren cap a l'esquerra per defecte.
-		// Els fotogrames de persecució (fila 1 de e_chaser.png) miren cap a la dreta per defecte.
-		// Per tant, ajustem el flip per mirar sempre cap a on avança:
 		bool bFlip = bChasing ? (direction == MOVE_DIR_LEFT) : (direction == MOVE_DIR_RIGHT);
 		sprite->setFlipX(bFlip);
 
@@ -240,4 +218,4 @@ private:
 	int chaseCooldown;
 };
 
-#endif // _ENEMYCHASER_INCLUDE
+#endif
