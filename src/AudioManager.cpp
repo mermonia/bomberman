@@ -54,18 +54,10 @@ AudioManager::AudioManager()
 AudioManager::~AudioManager()
 {
 	for(int s = 0; s < SFX_COUNT; s++)
-	{
 		for(int v = 0; v < AUDIO_VOICES; v++)
-		{
 			delete voices[s][v];
-			voices[s][v] = NULL;
-		}
-	}
 	for(int m = 0; m < MUSIC_COUNT; m++)
-	{
 		delete tracks[m];
-		tracks[m] = NULL;
-	}
 }
 
 void AudioManager::init()
@@ -75,57 +67,34 @@ void AudioManager::init()
 
 	ostringstream captured;
 	streambuf *previous = cerr.rdbuf(captured.rdbuf());
-
-	try
-	{
-		Audio::Device::getListener(0);
-		bAvailable = captured.str().empty();
-
-		if(bAvailable)
-		{
-			for(int s = 0; s < SFX_COUNT; s++)
-				for(int v = 0; v < AUDIO_VOICES; v++)
-					voices[s][v] = loadFile(soundFiles[s], false);
-			for(int m = 0; m < MUSIC_COUNT; m++)
-				tracks[m] = loadFile(musicFiles[m], true);
-		}
-	}
-	catch(...)
-	{
-		bAvailable = false;
-	}
-
+	Audio::Device::getListener(0);
 	cerr.rdbuf(previous);
+
+	bAvailable = captured.str().empty();
+	if(!bAvailable)
+		return;
+
+	for(int s = 0; s < SFX_COUNT; s++)
+		for(int v = 0; v < AUDIO_VOICES; v++)
+			voices[s][v] = loadFile(soundFiles[s], false);
+	for(int m = 0; m < MUSIC_COUNT; m++)
+		tracks[m] = loadFile(musicFiles[m], true);
 }
 
 Audio::Sound *AudioManager::loadFile(const string &file, bool bMusic)
 {
-	string path = assetPath(file);
-	error_code error;
-	if(!filesystem::exists(filesystem::path(path), error))
-		return NULL;
-
 	ostringstream captured;
 	streambuf *previous = cerr.rdbuf(captured.rdbuf());
-	Audio::Sound *sound = NULL;
-	try
-	{
-		sound = new Audio::Sound(filesystem::path(path), bMusic ? Audio::Sound::Type::Music : Audio::Sound::Type::Sound);
-	}
-	catch(...)
-	{
-		sound = NULL;
-	}
+	Audio::Sound *sound = new Audio::Sound(filesystem::path(assetPath(file)), bMusic ? Audio::Sound::Type::Music : Audio::Sound::Type::Sound);
 	cerr.rdbuf(previous);
 
-	if(sound != NULL && !captured.str().empty())
+	if(!captured.str().empty())
 	{
 		delete sound;
-		sound = NULL;
+		return NULL;
 	}
-	if(sound != NULL)
-		sound->setVolume(bMusic ? AUDIO_MUSIC_VOLUME : AUDIO_SOUND_VOLUME);
 
+	sound->setVolume(bMusic ? AUDIO_MUSIC_VOLUME : AUDIO_SOUND_VOLUME);
 	return sound;
 }
 
@@ -144,7 +113,7 @@ void AudioManager::update()
 
 void AudioManager::playSound(SoundId id)
 {
-	if(!bAvailable || id < 0 || id >= SFX_COUNT)
+	if(!bAvailable)
 		return;
 
 	Audio::Sound *voice = voices[id][nextVoice[id]];
@@ -155,7 +124,7 @@ void AudioManager::playSound(SoundId id)
 
 void AudioManager::playMusic(MusicId id)
 {
-	if(!bAvailable || id < 0 || id >= MUSIC_COUNT)
+	if(!bAvailable)
 		return;
 
 	if(isJingle(id))
