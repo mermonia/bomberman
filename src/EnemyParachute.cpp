@@ -125,7 +125,7 @@ void EnemyParachute::updateWalk(int deltaTime)
 		return;
 	}
 
-	if(attackCooldown <= 0 && seesPlayerBelow())
+	if(attackCooldown <= 0 && playerBelow(TILE_SIZE))
 	{
 		direction = (playerCenterX() >= posEnemy.x + 8) ? MOVE_DIR_RIGHT : MOVE_DIR_LEFT;
 		jump(PARACHUTE_ATTACK_HEIGHT, true);
@@ -190,7 +190,7 @@ void EnemyParachute::updateGlide(int deltaTime)
 		return;
 	}
 
-	bool bSteering = playerInGlideRange();
+	bool bSteering = playerBelow(0.f);
 	if(bSteering && !bAttacking)
 	{
 		bAttacking = true;
@@ -280,7 +280,7 @@ bool EnemyParachute::stepHorizontal(int dx)
 	return true;
 }
 
-bool EnemyParachute::seesPlayerBelow() const
+bool EnemyParachute::playerBelow(float minDy) const
 {
 	if(player == NULL || player->isDying())
 		return false;
@@ -289,19 +289,7 @@ bool EnemyParachute::seesPlayerBelow() const
 	float dx = std::abs((pPos.x + 8.f) - float(posEnemy.x + 8));
 	float dy = (pPos.y + 8.f) - float(posEnemy.y + 8);
 
-	return dx <= PARACHUTE_SIGHT_X_TILES * TILE_SIZE && dy >= TILE_SIZE && dy <= PARACHUTE_SIGHT_BELOW_TILES * TILE_SIZE;
-}
-
-bool EnemyParachute::playerInGlideRange() const
-{
-	if(player == NULL || player->isDying())
-		return false;
-
-	glm::vec2 pPos = player->getPosition();
-	float dx = std::abs((pPos.x + 8.f) - float(posEnemy.x + 8));
-	float dy = (pPos.y + 8.f) - float(posEnemy.y + 8);
-
-	return dx <= PARACHUTE_SIGHT_X_TILES * TILE_SIZE && dy >= 0.f && dy <= PARACHUTE_SIGHT_BELOW_TILES * TILE_SIZE;
+	return dx <= PARACHUTE_SIGHT_X_TILES * TILE_SIZE && dy >= minDy && dy <= PARACHUTE_SIGHT_BELOW_TILES * TILE_SIZE;
 }
 
 int EnemyParachute::playerCenterX() const

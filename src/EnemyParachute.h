@@ -31,8 +31,7 @@ private:
 	bool onGround() const;
 	bool stepVertical(int dy);
 	bool stepHorizontal(int dx);
-	bool seesPlayerBelow() const;
-	bool playerInGlideRange() const;
+	bool playerBelow(float minDy) const;
 	int playerCenterX() const;
 	void setAnimation(int anim);
 
