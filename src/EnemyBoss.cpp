@@ -59,10 +59,8 @@ EnemyBoss::EnemyBoss() : Enemy()
 
 EnemyBoss::~EnemyBoss()
 {
-	if(bulletSprite != NULL)
-		delete bulletSprite;
-	if(blastSprite != NULL)
-		delete blastSprite;
+	delete bulletSprite;
+	delete blastSprite;
 }
 
 void EnemyBoss::setPlayer(Player *p)
@@ -80,11 +78,8 @@ void EnemyBoss::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	spritesheet.setMinFilter(GL_NEAREST);
 	spritesheet.setMagFilter(GL_NEAREST);
 
-	float texW = spritesheet.width() > 0 ? float(spritesheet.width()) : 128.f;
-	float texH = spritesheet.height() > 0 ? float(spritesheet.height()) : 48.f;
-
-	float stepX = 16.f / texW;
-	float stepY = 16.f / texH;
+	float stepX = 16.f / spritesheet.width();
+	float stepY = 16.f / spritesheet.height();
 
 	sprite = Sprite::createSprite(glm::vec2(BOSS_SIZE, BOSS_SIZE), glm::vec2(2.f * stepX, 2.f * stepY), &spritesheet, &shaderProgram);
 	sprite->setNumberAnimations(2);
@@ -110,10 +105,8 @@ void EnemyBoss::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	blastSheet.setMinFilter(GL_NEAREST);
 	blastSheet.setMagFilter(GL_NEAREST);
 
-	float blastW = blastSheet.width() > 0 ? float(blastSheet.width()) : 128.f;
-	float blastH = blastSheet.height() > 0 ? float(blastSheet.height()) : 128.f;
-	float blastStepX = 16.f / blastW;
-	float blastStepY = 16.f / blastH;
+	float blastStepX = 16.f / blastSheet.width();
+	float blastStepY = 16.f / blastSheet.height();
 
 	blastSprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(blastStepX, blastStepY), &blastSheet, &shaderProgram);
 	blastSprite->setNumberAnimations(1);
@@ -211,7 +204,6 @@ void EnemyBoss::die()
 	if(bDying)
 		return;
 	bDying = true;
-	bDead = false;
 	dyingTime = 0;
 	state = BOSS_DRIFT;
 	flashTimer = 0;
@@ -393,13 +385,7 @@ void EnemyBoss::fireBurst()
 void EnemyBoss::clearBullets()
 {
 	for(int i = 0; i < BOSS_MAX_BULLETS; i++)
-	{
-		bullets[i].pos = glm::ivec2(0, 0);
-		bullets[i].dir = glm::ivec2(0, 0);
-		bullets[i].age = 0;
-		bullets[i].moveTimer = 0;
 		bullets[i].bAlive = false;
-	}
 }
 
 bool EnemyBoss::stepHorizontal(int dx)
@@ -430,9 +416,6 @@ bool EnemyBoss::stepVertical(int dy)
 
 bool EnemyBoss::blockedAt(const glm::ivec2 &pos) const
 {
-	if(map == NULL)
-		return false;
-
 	int x0 = pos.x / TILE_SIZE;
 	int x1 = (pos.x + BOSS_SIZE - 1) / TILE_SIZE;
 	int y0 = pos.y / TILE_SIZE;
