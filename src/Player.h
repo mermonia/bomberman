@@ -46,7 +46,7 @@ private:
 	bool bHasHeart;
 	bool bGodTint;
 	bool bUpWasPressed;
-	int invulnerableTime;
+	int invulnerableTime, jumpBufferTime;
 	float walkSpeed;
 	int dyingTime, maxDyingTime;
 	glm::ivec2 tileMapDispl, posPlayer;
