@@ -34,6 +34,7 @@ public:
 	void setGodTint(bool bTint) { bGodTint = bTint; }
 
 private:
+	bool hasHeadroom() const;
 	bool collisionDown(int *posY);
 	int walkStep(int deltaTime);
 	int fallStep(int deltaTime);
@@ -44,6 +45,7 @@ private:
 	bool bEnteringDoor;
 	bool bHasHeart;
 	bool bGodTint;
+	bool bUpWasPressed;
 	int invulnerableTime;
 	float walkSpeed;
 	int dyingTime, maxDyingTime;
