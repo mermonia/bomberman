@@ -12,6 +12,7 @@
 #define FALL_SPEED 15.f
 #define JUMP_HEIGHT_TILES 2
 #define JUMP_TIME 500
+#define JUMP_BUFFER_TIME 150
 
 #define JUMP_RISE (JUMP_HEIGHT_TILES * TILE_SIZE)
 
@@ -34,6 +35,8 @@ Player::Player()
 	bEnteringDoor = false;
 	bHasHeart = false;
 	bGodTint = false;
+	bUpWasPressed = false;
+	jumpBufferTime = 0;
 	invulnerableTime = 0;
 	walkSpeed = WALK_SPEED;
 	dyingTime = 0;
@@ -51,6 +54,8 @@ Player::~Player()
 void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
 	bJumping = false;
+	bUpWasPressed = false;
+	jumpBufferTime = 0;
 	program = &shaderProgram;
 	spritesheet.loadFromFile(assetPath("images/player.png"), TEXTURE_PIXEL_FORMAT_RGBA);
 	spritesheet.setWrapS(GL_CLAMP_TO_EDGE);
@@ -147,6 +152,17 @@ void Player::update(int deltaTime)
 		if(invulnerableTime < 0)
 			invulnerableTime = 0;
 	}
+
+	bool bUpPressed = Game::instance().getKey(GLFW_KEY_UP);
+	if(bUpPressed && !bUpWasPressed)
+		jumpBufferTime = JUMP_BUFFER_TIME;
+	else if(jumpBufferTime > 0)
+	{
+		jumpBufferTime -= deltaTime;
+		if(jumpBufferTime < 0)
+			jumpBufferTime = 0;
+	}
+	bUpWasPressed = bUpPressed;
 
 	sprite->update(deltaTime);
 	if(Game::instance().getKey(GLFW_KEY_LEFT))
@@ -290,8 +306,9 @@ void Player::update(int deltaTime)
 			else if(sprite->animation() == JUMP_RIGHT || sprite->animation() == FALL_RIGHT)
 				sprite->changeAnimation(STAND_RIGHT);
 
-			if(Game::instance().getKey(GLFW_KEY_UP))
+			if(jumpBufferTime > 0 && hasHeadroom())
 			{
+				jumpBufferTime = 0;
 				bJumping = true;
 				jumpAngle = 0.f;
 				startY = posPlayer.y;
@@ -430,6 +447,12 @@ int Player::fallStep(int deltaTime)
 		step = TILE_SIZE;
 
 	return step;
+}
+
+bool Player::hasHeadroom() const
+{
+	int ceilingY;
+	return map != NULL && !map->collisionMoveUp(glm::ivec2(posPlayer.x, posPlayer.y - 1), glm::ivec2(16, 16), &ceilingY);
 }
 
 bool Player::collisionDown(int *posY)

@@ -34,6 +34,7 @@ public:
 	void setGodTint(bool bTint) { bGodTint = bTint; }
 
 private:
+	bool hasHeadroom() const;
 	bool collisionDown(int *posY);
 	int walkStep(int deltaTime);
 	int fallStep(int deltaTime);
@@ -44,7 +45,8 @@ private:
 	bool bEnteringDoor;
 	bool bHasHeart;
 	bool bGodTint;
-	int invulnerableTime;
+	bool bUpWasPressed;
+	int invulnerableTime, jumpBufferTime;
 	float walkSpeed;
 	int dyingTime, maxDyingTime;
 	glm::ivec2 tileMapDispl, posPlayer;
