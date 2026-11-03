@@ -2,17 +2,20 @@
 
 A 2D Bomberman for the FIB *Videojocs* course (2026/27 Q1). OpenGL 3 + GLFW + GLEW + GLM.
 
-## Current state
+## Features
 
-This is work in progress. What runs today:
-
-- Tilemap rendering and collisions, loaded from `assets/levels/`.
-- Player movement.
-- Two enemy types: `Enemy` (patrol) and `EnemyChaser` (patrols, then chases the player).
-- Bombs.
-
-Everything else from the assignment — menus, 5 levels, the boss, powerups, HUD, audio — is
-still ahead of us. The feature roadmap lives on the project's Notion page.
+- Main menu with instructions and credits screens, fades between game states, game over and
+  victory screens.
+- Five levels loaded from `assets/levels/`, each with its own tileset; the exit door opens once
+  every enemy is dead.
+- Side-view movement with walking, jumping and falling, on tile-based collisions.
+- Bombs that block every entity while ticking and collapse barriers when they explode.
+- Enemies: patrol, chaser (patrols, then chases the player), parachute (glides down onto the
+  player), pufferfish (inflates and lunges near the player) and a final boss in level 5 that
+  floats, teleports and fires diagonal bullets.
+- Power-ups: extra bomb, extra life, longer flame and speed up.
+- HUD with time, lives, enemies left, bombs and flame range.
+- Music for the title and every level, jingles and sound effects.
 
 ## Building
 
@@ -60,7 +63,7 @@ cmake/                dependencies.cmake -- all FetchContent lives here
 generate-vs.bat       convenience wrapper for the VS generator
 src/                  all game and engine code
 assets/               everything the game loads at runtime
-  images/  levels/  shaders/
+  audio/  images/  levels/  shaders/
 art/                  GIMP .xcf sources for the sprites (not shipped)
 third_party/          stb_image.h
 docs/                 the assignment PDFs
@@ -72,4 +75,18 @@ from any working directory — don't go back to bare relative paths like `"image
 
 ## Controls
 
-Arrow keys to move, space to drop a bomb.
+| Key | Action |
+| --- | --- |
+| Left / Right | Walk |
+| Up | Jump |
+| A | Drop a bomb |
+| Esc | Back to the menu (quits from the menu) |
+| Up / Down (or W / S), Enter / Space | Navigate the menu |
+
+Debug keys during play:
+
+| Key | Action |
+| --- | --- |
+| 1 to 5 | Jump to that level |
+| K | Kill every enemy and open the door |
+| G | Toggle god mode |
