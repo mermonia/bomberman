@@ -30,6 +30,7 @@ add_executable(bomberman
 	src/ShaderProgram.cpp
 	src/BitmapFont.cpp
 	src/QuadRenderer.cpp
+	src/Bomb.cpp
 	src/HUD.cpp
 	src/MainMenu.cpp
 	src/AnimKeyframes.h
