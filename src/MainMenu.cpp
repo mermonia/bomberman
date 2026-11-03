@@ -324,22 +324,8 @@ void MainMenu::initShaders()
 
 void MainMenu::loadSpriteSheet()
 {
-	std::string paths[] = {
-		assetPath("images/example_levels/menus_color.png"),
-		assetPath("images/menus_color.png"),
-		"assets/images/example_levels/menus_color.png",
-		"assets/images/menus_color.png",
-		"../assets/images/example_levels/menus_color.png"
-	};
-
 	int ch = 0;
-	unsigned char *data = NULL;
-	for(const std::string &p : paths)
-	{
-		data = stbi_load(p.c_str(), &sheetW, &sheetH, &ch, 4);
-		if(data) break;
-	}
-
+	unsigned char *data = stbi_load(assetPath("images/example_levels/menus_color.png").c_str(), &sheetW, &sheetH, &ch, 4);
 	if(!data)
 	{
 		std::cerr << "MainMenu: cannot load menus_color.png" << std::endl;
