@@ -2,7 +2,6 @@
 #include <GL/glew.h>
 #include "EnemyChaser.h"
 #include "AssetPath.h"
-#include "AudioManager.h"
 
 EnemyChaser::EnemyChaser() : Enemy()
 {
@@ -64,16 +63,8 @@ void EnemyChaser::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgra
 void EnemyChaser::update(int deltaTime)
 {
 	sprite->update(deltaTime);
-
-	if(bDying)
-	{
-		dyingTime += deltaTime;
-		if(dyingTime >= 500)
-		{
-			bDead = true;
-		}
+	if(updateDying(deltaTime))
 		return;
-	}
 
 	if(chaseCooldown > 0)
 		chaseCooldown -= deltaTime;
@@ -123,58 +114,10 @@ void EnemyChaser::update(int deltaTime)
 	if(sprite->animation() != targetAnim)
 		sprite->changeAnimation(targetAnim);
 
-	posEnemy.y += 4;
-	bool onGround = (map != NULL) && map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
-
-	if(onGround && map != NULL)
+	if(fall() && patrol(moveStep(deltaTime, bChasing ? ENEMY_CHASE_SPEED : ENEMY_PATROL_SPEED)) && bChasing)
 	{
-		int steps = moveStep(deltaTime, bChasing ? ENEMY_CHASE_SPEED : ENEMY_PATROL_SPEED);
-
-		while(steps-- > 0)
-		{
-			if(direction == MOVE_DIR_RIGHT)
-			{
-				posEnemy.x += 1;
-
-				bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
-				int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
-				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
-
-				if(hitWall || cliffAhead)
-				{
-					posEnemy.x -= 1;
-					direction = MOVE_DIR_LEFT;
-					if(bChasing)
-					{
-						bChasing = false;
-						chaseCooldown = 1500;
-					}
-					break;
-				}
-			}
-			else if(direction == MOVE_DIR_LEFT)
-			{
-				posEnemy.x -= 1;
-
-				bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
-				int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
-				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
-
-				if(hitWall || cliffAhead)
-				{
-					posEnemy.x += 1;
-					direction = MOVE_DIR_RIGHT;
-					if(bChasing)
-					{
-						bChasing = false;
-						chaseCooldown = 1500;
-					}
-					break;
-				}
-			}
-		}
+		bChasing = false;
+		chaseCooldown = 1500;
 	}
 
 	bool bFlip = bChasing ? (direction == MOVE_DIR_LEFT) : (direction == MOVE_DIR_RIGHT);
@@ -187,11 +130,7 @@ void EnemyChaser::die()
 {
 	if(bDying)
 		return;
-	bDying = true;
-	AudioManager::instance().playSound(SFX_ENEMY_DIE);
-	bDead = false;
-	dyingTime = 0;
-	if(sprite != NULL)
-		sprite->setFlipX(false);
+	Enemy::die();
+	sprite->setFlipX(false);
 	sprite->changeAnimation(ENEMY_CHASER_DIE);
 }

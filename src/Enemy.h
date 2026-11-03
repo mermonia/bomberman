@@ -35,6 +35,9 @@ public:
 protected:
 	int moveStep(int deltaTime, float tilesPerSecond);
 	int moveStep(int deltaTime, float tilesPerSecond, float &remainder);
+	bool updateDying(int deltaTime);
+	bool fall();
+	bool patrol(int steps);
 
 protected:
 	glm::ivec2 tileMapDispl, posEnemy;

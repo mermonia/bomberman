@@ -67,76 +67,57 @@ void Enemy::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 void Enemy::update(int deltaTime)
 {
 	sprite->update(deltaTime);
-
-	if(bDying)
-	{
-		dyingTime += deltaTime;
-		if(dyingTime >= 500)
-		{
-			bDead = true;
-		}
+	if(updateDying(deltaTime))
 		return;
-	}
 
-	posEnemy.y += FALL_STEP;
-	bool onGround = (map != NULL) && map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
-
-	if(onGround && map != NULL)
+	if(fall())
 	{
-		int steps = moveStep(deltaTime, ENEMY_PATROL_SPEED);
-
-		while(steps-- > 0)
-		{
-			if(direction == MOVE_DIR_RIGHT)
-			{
-				posEnemy.x += 1;
-
-				bool hitWall = map->collisionMoveRight(posEnemy, glm::ivec2(16, 16));
-				int xTileAhead = (posEnemy.x + 16) / map->getTileSize();
-				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
-
-				if(hitWall || cliffAhead)
-				{
-					posEnemy.x -= 1;
-					direction = MOVE_DIR_LEFT;
-					if(sprite->animation() != MOVE_LEFT)
-						sprite->changeAnimation(MOVE_LEFT);
-					break;
-				}
-				else
-				{
-					if(sprite->animation() != MOVE_RIGHT)
-						sprite->changeAnimation(MOVE_RIGHT);
-				}
-			}
-			else if(direction == MOVE_DIR_LEFT)
-			{
-				posEnemy.x -= 1;
-
-				bool hitWall = map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
-				int xTileAhead = (posEnemy.x - 1) / map->getTileSize();
-				int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
-				bool cliffAhead = !map->isGround(xTileAhead, yTileUnder);
-
-				if(hitWall || cliffAhead)
-				{
-					posEnemy.x += 1;
-					direction = MOVE_DIR_RIGHT;
-					if(sprite->animation() != MOVE_RIGHT)
-						sprite->changeAnimation(MOVE_RIGHT);
-					break;
-				}
-				else
-				{
-					if(sprite->animation() != MOVE_LEFT)
-						sprite->changeAnimation(MOVE_LEFT);
-				}
-			}
-		}
+		patrol(moveStep(deltaTime, ENEMY_PATROL_SPEED));
+		int anim = (direction == MOVE_DIR_LEFT) ? MOVE_LEFT : MOVE_RIGHT;
+		if(sprite->animation() != anim)
+			sprite->changeAnimation(anim);
 	}
 
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posEnemy.x), float(tileMapDispl.y + posEnemy.y)));
+}
+
+bool Enemy::updateDying(int deltaTime)
+{
+	if(!bDying)
+		return false;
+
+	dyingTime += deltaTime;
+	if(dyingTime >= 500)
+		bDead = true;
+	return true;
+}
+
+bool Enemy::fall()
+{
+	posEnemy.y += FALL_STEP;
+	return map->collisionMoveDown(posEnemy, glm::ivec2(16, 16), &posEnemy.y);
+}
+
+bool Enemy::patrol(int steps)
+{
+	while(steps-- > 0)
+	{
+		int dx = (direction == MOVE_DIR_RIGHT) ? 1 : -1;
+		posEnemy.x += dx;
+
+		bool bHitWall = (dx > 0) ? map->collisionMoveRight(posEnemy, glm::ivec2(16, 16)) : map->collisionMoveLeft(posEnemy, glm::ivec2(16, 16));
+		int xTileAhead = ((dx > 0) ? posEnemy.x + 16 : posEnemy.x - 1) / map->getTileSize();
+		int yTileUnder = (posEnemy.y + 16) / map->getTileSize();
+		bool bCliffAhead = !map->isGround(xTileAhead, yTileUnder);
+
+		if(bHitWall || bCliffAhead)
+		{
+			posEnemy.x -= dx;
+			direction = (dx > 0) ? MOVE_DIR_LEFT : MOVE_DIR_RIGHT;
+			return true;
+		}
+	}
+	return false;
 }
 
 int Enemy::moveStep(int deltaTime, float tilesPerSecond)
