@@ -21,6 +21,7 @@ add_executable(bomberman
 	src/TileMap.cpp
 	src/Player.cpp
 	src/Enemy.cpp
+	src/EnemyChaser.cpp
 	src/EnemyParachute.cpp
 	src/EnemyPufferfish.cpp
 	src/EnemyBoss.cpp
