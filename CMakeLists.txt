@@ -31,6 +31,7 @@ add_executable(bomberman
 	src/BitmapFont.cpp
 	src/QuadRenderer.cpp
 	src/Bomb.cpp
+	src/PowerUp.cpp
 	src/HUD.cpp
 	src/MainMenu.cpp
 	src/AnimKeyframes.h
