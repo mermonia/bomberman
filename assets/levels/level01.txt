@@ -5,6 +5,8 @@ images/blocks1.png
 8 8
 AIR 7
 BARRIER 0 8 16
+BUSH 12
+DOOR 35 17
 PLAYER 3 17
 ENEMY patrol 8 17
 ENEMY chaser 13 17
