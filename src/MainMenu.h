@@ -6,6 +6,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "ShaderProgram.h"
+#include "BitmapFont.h"
+#include "QuadRenderer.h"
 
 enum GameState
 {
@@ -53,8 +55,6 @@ private:
 	void initShaders();
 	void loadSpriteSheet();
 
-	void renderQuad(float x, float y, float w, float h,
-	                float u0, float v0, float u1, float v1);
 	void renderSolidQuad(float x, float y, float w, float h, const glm::vec4 &col);
 
 	void renderChar(char c, float x, float y, float scale, const glm::vec4 &col);
@@ -76,11 +76,8 @@ private:
 private:
 	ShaderProgram texProgram;
 	GLuint menuTexId;
-	GLuint whiteTexId;
-	GLuint fontTexId;
-
-	GLuint vao, vbo;
-	GLint posLoc, texLoc;
+	BitmapFont font;
+	QuadRenderer quads;
 
 	int sheetW, sheetH;
 

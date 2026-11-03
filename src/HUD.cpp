@@ -9,77 +9,9 @@
 #include "HUD.h"
 #include "AssetPath.h"
 
-static const unsigned char FONT_8x8[59][8] = {
-	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
-	{0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00},
-	{0x6C,0x6C,0x00,0x00,0x00,0x00,0x00,0x00},
-	{0x6C,0xFE,0x6C,0x6C,0xFE,0x6C,0x00,0x00},
-	{0x18,0x7E,0xC0,0x7C,0x06,0xFC,0x18,0x00},
-	{0xC6,0xCC,0x18,0x30,0x66,0xC6,0x00,0x00},
-	{0x38,0x6C,0x38,0x76,0xDC,0xCC,0x76,0x00},
-	{0x18,0x18,0x30,0x00,0x00,0x00,0x00,0x00},
-	{0x0C,0x18,0x30,0x30,0x30,0x18,0x0C,0x00},
-	{0x30,0x18,0x0C,0x0C,0x0C,0x18,0x30,0x00},
-	{0x00,0x66,0x3C,0xFF,0x3C,0x66,0x00,0x00},
-	{0x00,0x18,0x18,0x7E,0x18,0x18,0x00,0x00},
-	{0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x30},
-	{0x00,0x00,0x00,0x7E,0x00,0x00,0x00,0x00},
-	{0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x00},
-	{0x06,0x0C,0x18,0x30,0x60,0xC0,0x00,0x00},
-	{0x3C,0x66,0x6E,0x76,0x66,0x66,0x3C,0x00},
-	{0x18,0x38,0x18,0x18,0x18,0x18,0x7E,0x00},
-	{0x3C,0x66,0x06,0x0C,0x18,0x30,0x7E,0x00},
-	{0x3C,0x66,0x06,0x1C,0x06,0x66,0x3C,0x00},
-	{0x0C,0x1C,0x3C,0x6C,0x7E,0x0C,0x0C,0x00},
-	{0x7E,0x60,0x7C,0x06,0x06,0x66,0x3C,0x00},
-	{0x1C,0x30,0x60,0x7C,0x66,0x66,0x3C,0x00},
-	{0x7E,0x06,0x0C,0x18,0x30,0x30,0x30,0x00},
-	{0x3C,0x66,0x66,0x3C,0x66,0x66,0x3C,0x00},
-	{0x3C,0x66,0x66,0x3E,0x06,0x0C,0x38,0x00},
-	{0x00,0x18,0x18,0x00,0x18,0x18,0x00,0x00},
-	{0x00,0x18,0x18,0x00,0x18,0x18,0x30,0x00},
-	{0x0C,0x18,0x30,0x60,0x30,0x18,0x0C,0x00},
-	{0x00,0x00,0x7E,0x00,0x7E,0x00,0x00,0x00},
-	{0x30,0x18,0x0C,0x06,0x0C,0x18,0x30,0x00},
-	{0x3C,0x66,0x06,0x0C,0x18,0x00,0x18,0x00},
-	{0x3C,0x66,0x6E,0x6E,0x60,0x66,0x3C,0x00},
-	{0x18,0x3C,0x66,0x66,0x7E,0x66,0x66,0x00},
-	{0x7C,0x66,0x66,0x7C,0x66,0x66,0x7C,0x00},
-	{0x3C,0x66,0x60,0x60,0x60,0x66,0x3C,0x00},
-	{0x78,0x6C,0x66,0x66,0x66,0x6C,0x78,0x00},
-	{0x7E,0x60,0x60,0x7C,0x60,0x60,0x7E,0x00},
-	{0x7E,0x60,0x60,0x7C,0x60,0x60,0x60,0x00},
-	{0x3C,0x66,0x60,0x6E,0x66,0x66,0x3E,0x00},
-	{0x66,0x66,0x66,0x7E,0x66,0x66,0x66,0x00},
-	{0x7E,0x18,0x18,0x18,0x18,0x18,0x7E,0x00},
-	{0x3E,0x0C,0x0C,0x0C,0x0C,0x6C,0x38,0x00},
-	{0x66,0x6C,0x78,0x70,0x78,0x6C,0x66,0x00},
-	{0x60,0x60,0x60,0x60,0x60,0x60,0x7E,0x00},
-	{0xC6,0xEE,0xFE,0xD6,0xC6,0xC6,0xC6,0x00},
-	{0x66,0x76,0x7E,0x7E,0x6E,0x66,0x66,0x00},
-	{0x3C,0x66,0x66,0x66,0x66,0x66,0x3C,0x00},
-	{0x7C,0x66,0x66,0x7C,0x60,0x60,0x60,0x00},
-	{0x3C,0x66,0x66,0x66,0x6A,0x6C,0x36,0x00},
-	{0x7C,0x66,0x66,0x7C,0x6C,0x66,0x66,0x00},
-	{0x3C,0x66,0x70,0x3C,0x0E,0x66,0x3C,0x00},
-	{0x7E,0x18,0x18,0x18,0x18,0x18,0x18,0x00},
-	{0x66,0x66,0x66,0x66,0x66,0x66,0x3C,0x00},
-	{0x66,0x66,0x66,0x66,0x66,0x3C,0x18,0x00},
-	{0xC6,0xC6,0xC6,0xD6,0xFE,0xEE,0xC6,0x00},
-	{0x66,0x66,0x3C,0x18,0x3C,0x66,0x66,0x00},
-	{0x66,0x66,0x66,0x3C,0x18,0x18,0x18,0x00},
-	{0x7E,0x06,0x0C,0x18,0x30,0x60,0x7E,0x00},
-};
-
 HUD::HUD()
 {
 	shaderProgram = NULL;
-	whiteTexId = 0;
-	fontTexId = 0;
-	vao = 0;
-	vbo = 0;
-	posLocation = 0;
-	texCoordLocation = 0;
 	barPinkColor = glm::vec4(0.933f, 0.482f, 0.690f, 1.0f);
 	texWidth = 24;
 	texHeight = 16;
@@ -87,14 +19,6 @@ HUD::HUD()
 
 HUD::~HUD()
 {
-	if(whiteTexId != 0)
-		glDeleteTextures(1, &whiteTexId);
-	if(fontTexId != 0)
-		glDeleteTextures(1, &fontTexId);
-	if(vao != 0)
-		glDeleteVertexArrays(1, &vao);
-	if(vbo != 0)
-		glDeleteBuffers(1, &vbo);
 }
 
 void HUD::init(ShaderProgram *program)
@@ -126,78 +50,8 @@ void HUD::init(ShaderProgram *program)
 		barPinkColor = glm::vec4(238.f / 255.f, 123.f / 255.f, 176.f / 255.f, 1.0f);
 	}
 
-	unsigned char whitePixel[4] = { 255, 255, 255, 255 };
-	glGenTextures(1, &whiteTexId);
-	glBindTexture(GL_TEXTURE_2D, whiteTexId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
-
-	const int GLYPH_COUNT = 59;
-	const int AW = GLYPH_COUNT * 8;
-	const int AH = 8;
-	std::vector<unsigned char> fontData(AW * AH * 4, 0);
-
-	for(int glyph = 0; glyph < GLYPH_COUNT; glyph++)
-	{
-		for(int row = 0; row < 8; row++)
-		{
-			unsigned char byte = FONT_8x8[glyph][row];
-			for(int col = 0; col < 8; col++)
-			{
-				bool bitOn = (byte & (1 << (7 - col))) != 0;
-				int px = glyph * 8 + col;
-				int py = row;
-				int index = (py * AW + px) * 4;
-				if(bitOn)
-				{
-					fontData[index + 0] = 255;
-					fontData[index + 1] = 255;
-					fontData[index + 2] = 255;
-					fontData[index + 3] = 255;
-				}
-			}
-		}
-	}
-
-	glGenTextures(1, &fontTexId);
-	glBindTexture(GL_TEXTURE_2D, fontTexId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, AW, AH, 0, GL_RGBA, GL_UNSIGNED_BYTE, fontData.data());
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-	posLocation = program->bindVertexAttribute("position", 2, 4 * sizeof(float), 0);
-	texCoordLocation = program->bindVertexAttribute("texCoord", 2, 4 * sizeof(float), (void *)(2 * sizeof(float)));
-}
-
-void HUD::renderQuad(float x, float y, float width, float height, float u0, float v0, float u1, float v1)
-{
-	float vertices[24] = {
-		x, y, u0, v0,
-		x + width, y, u1, v0,
-		x + width, y + height, u1, v1,
-		x, y, u0, v0,
-		x + width, y + height, u1, v1,
-		x, y + height, u0, v1
-	};
-
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 24 * sizeof(float), vertices);
-
-	glEnableVertexAttribArray(posLocation);
-	glEnableVertexAttribArray(texCoordLocation);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	font.init();
+	quads.init(*program);
 }
 
 void HUD::renderIcon(HUDIconType type, float x, float y, float size)
@@ -237,26 +91,17 @@ void HUD::renderIcon(HUDIconType type, float x, float y, float size)
 	glEnable(GL_TEXTURE_2D);
 	textureBarra.use();
 	shaderProgram->setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
-	renderQuad(x, y, size, size, u0, v0, u1, v1);
+	quads.render(x, y, size, size, u0, v0, u1, v1);
 }
 
 void HUD::renderChar(char c, float x, float y, float width, float height, const glm::vec4 &color)
 {
-	if(c >= 'a' && c <= 'z')
-		c = (char)(c - 32);
+	float u0, u1;
+	font.glyphCoords(c, u0, u1);
 
-	int glyphIdx = 0;
-	if(c >= 32 && c <= 90)
-		glyphIdx = c - 32;
-
-	float u0 = (float)(glyphIdx * 8) / 472.0f;
-	float u1 = (float)((glyphIdx + 1) * 8) / 472.0f;
-	float v0 = 0.0f;
-	float v1 = 1.0f;
-
-	glBindTexture(GL_TEXTURE_2D, fontTexId);
+	font.use();
 	shaderProgram->setUniform4f("color", color.r, color.g, color.b, color.a);
-	renderQuad(x, y, width, height, u0, v0, u1, v1);
+	quads.render(x, y, width, height, u0, 0.0f, u1, 1.0f);
 }
 
 void HUD::renderString(const std::string &str, float x, float y, float charAdvance, float width, float height, const glm::vec4 &color)
@@ -291,22 +136,21 @@ void HUD::renderExitPrompt(float animTime)
 	const float bannerX = 120.0f - bannerW * 0.5f;
 	const float bannerY = 8.0f;
 
-	glBindTexture(GL_TEXTURE_2D, whiteTexId);
 	shaderProgram->setUniform4f("color", 0.04f, 0.05f, 0.10f, 0.88f);
-	renderQuad(bannerX, bannerY, bannerW, bannerH, 0.0f, 0.0f, 1.0f, 1.0f);
+	quads.renderSolid(bannerX, bannerY, bannerW, bannerH);
 
 	glm::vec4 borderCol(1.0f, 0.84f, 0.20f, 0.70f + 0.30f * pulse);
 	shaderProgram->setUniform4f("color", borderCol.r, borderCol.g, borderCol.b, borderCol.a);
-	renderQuad(bannerX, bannerY, bannerW, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX, bannerY + bannerH - 1.0f, bannerW, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX, bannerY, 1.0f, bannerH, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX + bannerW - 1.0f, bannerY, 1.0f, bannerH, 0.0f, 0.0f, 1.0f, 1.0f);
+	quads.renderSolid(bannerX, bannerY, bannerW, 1.0f);
+	quads.renderSolid(bannerX, bannerY + bannerH - 1.0f, bannerW, 1.0f);
+	quads.renderSolid(bannerX, bannerY, 1.0f, bannerH);
+	quads.renderSolid(bannerX + bannerW - 1.0f, bannerY, 1.0f, bannerH);
 
 	shaderProgram->setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
-	renderQuad(bannerX, bannerY, 2.0f, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX + bannerW - 2.0f, bannerY, 2.0f, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX, bannerY + bannerH - 2.0f, 2.0f, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	renderQuad(bannerX + bannerW - 2.0f, bannerY + bannerH - 2.0f, 2.0f, 2.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	quads.renderSolid(bannerX, bannerY, 2.0f, 2.0f);
+	quads.renderSolid(bannerX + bannerW - 2.0f, bannerY, 2.0f, 2.0f);
+	quads.renderSolid(bannerX, bannerY + bannerH - 2.0f, 2.0f, 2.0f);
+	quads.renderSolid(bannerX + bannerW - 2.0f, bannerY + bannerH - 2.0f, 2.0f, 2.0f);
 
 	glm::vec4 textCol(1.0f, 0.85f + 0.15f * pulse, 0.25f + 0.75f * pulse, 1.0f);
 	glm::vec4 arrowCol(1.0f, 0.40f + 0.40f * pulse, 0.20f, 0.90f);
@@ -339,9 +183,8 @@ void HUD::render(int timeRemainingSeconds, int lives, int enemiesLeft, int maxBo
 	const float barY = 150.0f;
 	const float barHeight = 10.0f;
 
-	glBindTexture(GL_TEXTURE_2D, whiteTexId);
 	shaderProgram->setUniform4f("color", barPinkColor.r, barPinkColor.g, barPinkColor.b, 1.0f);
-	renderQuad(0.0f, barY, 240.0f, barHeight, 0.0f, 0.0f, 1.0f, 1.0f);
+	quads.renderSolid(0.0f, barY, 240.0f, barHeight);
 
 	const float itemY = 151.0f;
 	const float iconSize = 8.0f;

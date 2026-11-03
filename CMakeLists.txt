@@ -21,6 +21,7 @@ add_executable(bomberman
 	src/TileMap.cpp
 	src/Player.cpp
 	src/Enemy.cpp
+	src/EnemyChaser.cpp
 	src/EnemyParachute.cpp
 	src/EnemyPufferfish.cpp
 	src/EnemyBoss.cpp
@@ -28,6 +29,10 @@ add_executable(bomberman
 	src/Texture.cpp
 	src/Shader.cpp
 	src/ShaderProgram.cpp
+	src/BitmapFont.cpp
+	src/QuadRenderer.cpp
+	src/Bomb.cpp
+	src/PowerUp.cpp
 	src/HUD.cpp
 	src/MainMenu.cpp
 	src/AnimKeyframes.h
@@ -40,6 +45,8 @@ add_executable(bomberman
 	src/EnemyPufferfish.h
 	src/EnemyBoss.h
 	src/Game.h
+	src/BitmapFont.h
+	src/QuadRenderer.h
 	src/HUD.h
 	src/MainMenu.h
 	src/Player.h

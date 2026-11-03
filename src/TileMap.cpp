@@ -275,62 +275,8 @@ bool TileMap::loadLevel(const string &levelFile)
 	}
 	fin.close();
 
-	if(bushTiles.empty())
-	{
-		if(tilesheetFile.find("blocks1") != string::npos)
-			bushTiles.push_back(12);
-		else if(tilesheetFile.find("blocks2") != string::npos)
-		{
-			bushTiles.push_back(11);
-			bushTiles.push_back(19);
-		}
-		else if(tilesheetFile.find("blocks3") != string::npos)
-		{
-			bushTiles.push_back(8);
-		}
-		else if(tilesheetFile.find("blocks4") != string::npos)
-		{
-			bushTiles.push_back(1);
-		}
-	}
-
-	if(doorTile.x < 0)
-	{
-		int targetDoorId = -1;
-		if(tilesheetFile.find("blocks1") != string::npos)
-			targetDoorId = 20;
-		else if(tilesheetFile.find("blocks2") != string::npos)
-			targetDoorId = 13;
-		else if(tilesheetFile.find("blocks3") != string::npos)
-			targetDoorId = 10;
-		else if(tilesheetFile.find("blocks4") != string::npos)
-			targetDoorId = 3;
-		else if(tilesheetFile.find("blocks5") != string::npos)
-			targetDoorId = 12;
-
-		if(targetDoorId >= 0)
-		{
-			for(int j = 0; j < mapSize.y; j++)
-			{
-				for(int i = 0; i < mapSize.x; i++)
-				{
-					if(map[j * mapSize.x + i] == targetDoorId)
-					{
-						doorTile = glm::ivec2(i, j);
-						doorTileId = targetDoorId;
-						break;
-					}
-				}
-				if(doorTile.x >= 0)
-					break;
-			}
-		}
-	}
-	else
-	{
-		if(doorTile.x >= 0 && doorTile.x < mapSize.x && doorTile.y >= 0 && doorTile.y < mapSize.y)
-			doorTileId = map[doorTile.y * mapSize.x + doorTile.x];
-	}
+	if(doorTile.x >= 0 && doorTile.x < mapSize.x && doorTile.y >= 0 && doorTile.y < mapSize.y)
+		doorTileId = map[doorTile.y * mapSize.x + doorTile.x];
 
 	return true;
 }

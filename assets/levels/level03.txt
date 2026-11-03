@@ -4,6 +4,8 @@ TILEMAP
 images/blocks3.png
 8 8
 AIR 9
+BUSH 8
+DOOR 16 8
 PLAYER 3 32
 ENEMY patrol 7 32
 ENEMY patrol 11 26
